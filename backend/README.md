@@ -1,8 +1,10 @@
-# Civix Backend Service (Phase 1)
+# Civix Backend Service (Milestone 1 & Milestone 2)
 
 Civix is a Digital Civic Engagement & Petition Platform designed to empower citizens and government officials to engage transparently on civic issues, petitions, polling, and governance reporting.
 
-This service constitutes the **REST API Backend** built for **Phase 1 / Milestone 1: User Roles & Verification**.
+This service constitutes the **REST API Backend** for:
+- **Milestone 1:** User Roles & Verification (Authentication, JWT, Roles, Profile)
+- **Milestone 2:** Petition Creation & Management (Create, View, Search, Filter, Pagination, Edit/Delete before signatures)
 
 ---
 
@@ -28,28 +30,34 @@ backend/
 │   ├── config/
 │   │   └── db.js                 # MongoDB connection logic (Mongoose)
 │   ├── controllers/
-│   │   └── auth.controller.js    # HTTP controllers for auth endpoints
+│   │   ├── auth.controller.js    # Auth HTTP controllers (register, login, me)
+│   │   └── petition.controller.js# Petition HTTP controllers (CRUD, search, filter)
 │   ├── middleware/
-│   │   ├── auth.middleware.js    # JWT authentication middleware (extracts & verifies Bearer token)
-│   │   ├── role.middleware.js    # Reusable role-based access control (citizen / official)
+│   │   ├── auth.middleware.js    # JWT authentication middleware
+│   │   ├── role.middleware.js    # Role-based access control (citizen / official)
 │   │   ├── validate.middleware.js# Express-validator error handling middleware
 │   │   └── error.middleware.js   # Centralized error handler & 404 handler
 │   ├── models/
-│   │   └── user.model.js         # Mongoose User model with secure hashing & schema validation
+│   │   ├── user.model.js         # Mongoose User model
+│   │   └── petition.model.js     # Mongoose Petition model
 │   ├── routes/
-│   │   ├── auth.routes.js        # Auth endpoint definitions (/register, /login, /me)
-│   │   └── index.js              # Central API router aggregator (/api/health, /api/auth)
+│   │   ├── auth.routes.js        # Auth endpoint definitions (/api/auth)
+│   │   ├── petition.routes.js    # Petition endpoint definitions (/api/petitions)
+│   │   └── index.js              # Central API router aggregator
 │   ├── services/
-│   │   └── auth.service.js       # Core authentication business logic & user operations
+│   │   ├── auth.service.js       # Authentication business logic & user operations
+│   │   └── petition.service.js   # Petition business logic, search, filter, restrictions
 │   ├── validators/
-│   │   └── auth.validator.js     # Payload validation rules for auth routes
+│   │   ├── auth.validator.js     # Payload validation rules for auth routes
+│   │   └── petition.validator.js # Payload and query validation rules for petitions
 │   ├── utils/
 │   │   ├── response.js           # Standardized API response formatters
 │   │   └── token.js              # JWT generation and verification utilities
 │   ├── app.js                    # Express app configuration, middleware, and route mounting
 │   └── server.js                 # Server entry point: connects to DB and listens on PORT
 ├── tests/
-│   └── auth.test.js              # Integration test suite for Phase 1 endpoints
+│   ├── auth.test.js              # Integration test suite for Milestone 1 auth endpoints
+│   └── petition.test.js          # Integration test suite for Milestone 2 petition endpoints
 ├── .env.example                  # Environment configuration template
 ├── .gitignore                    # Git ignore file for backend
 ├── package.json                  # Dependencies, metadata, and scripts
@@ -103,11 +111,11 @@ npm test
 
 ---
 
-## 📡 API Specification (Phase 1)
+## 📡 API Specification
 
 All endpoints are prefixed with `/api`.
 
-### Standard Response Format
+### Standard Response Formats
 
 **Success Response (2xx):**
 ```json
@@ -125,8 +133,8 @@ All endpoints are prefixed with `/api`.
   "message": "Error description",
   "errors": [
     {
-      "field": "email",
-      "message": "Please provide a valid email address"
+      "field": "title",
+      "message": "Title must be between 5 and 150 characters"
     }
   ]
 }
@@ -134,63 +142,50 @@ All endpoints are prefixed with `/api`.
 
 ---
 
-### 1. Health Check
-- **Endpoint:** `GET /api/health`
-- **Access:** Public
-- **Description:** Verifies that the API service is alive and healthy.
+### Authentication Endpoints (Milestone 1)
 
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "message": "Civix API is operational",
-  "data": {
-    "status": "online",
-    "timestamp": "2026-08-26T15:30:00.000Z"
-  }
-}
-```
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/health` | Public | Service health & status check |
+| `POST` | `/api/auth/register` | Public | Register `citizen` or `official` with location & verification state |
+| `POST` | `/api/auth/login` | Public | Authenticate user & return signed JWT with safe user profile |
+| `GET` | `/api/auth/me` | Protected | Retrieve authenticated user profile (Bearer token) |
 
 ---
 
-### 2. User Registration
-- **Endpoint:** `POST /api/auth/register`
-- **Access:** Public
-- **Description:** Registers a new `citizen` or `official` user with optional location and ID verification data.
+### Petition Endpoints (Milestone 2)
 
-**Request Body (Citizen Example):**
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/petitions` | Protected | Create a new civic petition |
+| `GET` | `/api/petitions` | Public | List active petitions with search, filter, sorting, and pagination |
+| `GET` | `/api/petitions/my` | Protected | List petitions created by the authenticated user (including drafts) |
+| `GET` | `/api/petitions/:id` | Public | Get details of a single petition by ID (populated creator) |
+| `PUT` | `/api/petitions/:id` | Protected (Creator) | Edit petition (Allowed ONLY if `signaturesCount === 0`) |
+| `DELETE` | `/api/petitions/:id` | Protected (Creator) | Delete petition (Allowed ONLY if `signaturesCount === 0`) |
+
+---
+
+### Petition API Examples
+
+#### 1. Create a Petition (`POST /api/petitions`)
+**Headers:** `Authorization: Bearer <token>`
 ```json
 {
-  "name": "John Citizen",
-  "email": "john.citizen@example.com",
-  "password": "Password123!",
-  "role": "citizen",
+  "title": "Fix Main Street Potholes and Improve Road Safety",
+  "description": "The potholes on Main Street from 1st Cross to 5th Block have become dangerous for commuters and pedestrians.",
+  "category": "Infrastructure",
+  "tags": ["roads", "safety", "infrastructure"],
+  "targetSignatures": 250,
   "location": {
-    "address": "123 Civic Road",
+    "address": "Main Street, Koramangala",
     "city": "Bengaluru",
     "state": "Karnataka",
-    "pincode": "560001",
-    "latitude": 12.9716,
-    "longitude": 77.5946
-  }
-}
-```
-
-**Request Body (Official Example):**
-```json
-{
-  "name": "Jane Official",
-  "email": "jane.official@gov.in",
-  "password": "OfficialPass123!",
-  "role": "official",
-  "location": {
-    "city": "Bengaluru",
-    "state": "Karnataka",
-    "pincode": "560001"
+    "pincode": "560034",
+    "latitude": 12.9352,
+    "longitude": 77.6245
   },
-  "verification": {
-    "documentType": "GOVERNMENT_OFFICIAL_ID"
-  }
+  "status": "active"
 }
 ```
 
@@ -198,122 +193,35 @@ All endpoints are prefixed with `/api`.
 ```json
 {
   "success": true,
-  "message": "User registered successfully",
+  "message": "Petition created successfully",
   "data": {
-    "user": {
-      "_id": "67be0c5f2b84784a9e53b491",
-      "name": "John Citizen",
-      "email": "john.citizen@example.com",
-      "role": "citizen",
+    "petition": {
+      "_id": "67be184b2e8a123456789abc",
+      "title": "Fix Main Street Potholes and Improve Road Safety",
+      "description": "The potholes on Main Street from 1st Cross to 5th Block have become dangerous for commuters and pedestrians.",
+      "category": "Infrastructure",
+      "tags": ["roads", "safety", "infrastructure"],
+      "targetSignatures": 250,
+      "signaturesCount": 0,
       "location": {
-        "address": "123 Civic Road",
+        "address": "Main Street, Koramangala",
         "city": "Bengaluru",
         "state": "Karnataka",
-        "pincode": "560001",
-        "latitude": 12.9716,
-        "longitude": 77.5946
+        "pincode": "560034",
+        "latitude": 12.9352,
+        "longitude": 77.6245
       },
-      "verification": {
-        "isVerified": false,
-        "status": "unsubmitted",
-        "documentType": null,
-        "verifiedAt": null
+      "creator": {
+        "_id": "67be0c5f2b84784a9e53b491",
+        "name": "John Citizen",
+        "email": "citizen@example.com",
+        "role": "citizen",
+        "location": { "city": "Bengaluru", "state": "Karnataka" }
       },
-      "createdAt": "2026-08-26T15:30:00.000Z",
-      "updatedAt": "2026-08-26T15:30:00.000Z"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
----
-
-### 3. User Login
-- **Endpoint:** `POST /api/auth/login`
-- **Access:** Public
-- **Description:** Authenticates a user with email and password, returning a signed JWT token.
-
-**Request Body:**
-```json
-{
-  "email": "john.citizen@example.com",
-  "password": "Password123!"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "user": {
-      "_id": "67be0c5f2b84784a9e53b491",
-      "name": "John Citizen",
-      "email": "john.citizen@example.com",
-      "role": "citizen",
-      "location": {
-        "address": "123 Civic Road",
-        "city": "Bengaluru",
-        "state": "Karnataka",
-        "pincode": "560001",
-        "latitude": 12.9716,
-        "longitude": 77.5946
-      },
-      "verification": {
-        "isVerified": false,
-        "status": "unsubmitted",
-        "documentType": null,
-        "verifiedAt": null
-      },
-      "createdAt": "2026-08-26T15:30:00.000Z",
-      "updatedAt": "2026-08-26T15:30:00.000Z"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
----
-
-### 4. Get Current User Profile
-- **Endpoint:** `GET /api/auth/me`
-- **Access:** Protected (Requires `Authorization: Bearer <token>`)
-- **Description:** Retrieves the authenticated user's profile info (useful for Angular frontend session restoration and dashboard personalization).
-
-**Headers:**
-```http
-Authorization: Bearer <token>
-```
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "message": "Profile retrieved successfully",
-  "data": {
-    "user": {
-      "_id": "67be0c5f2b84784a9e53b491",
-      "name": "John Citizen",
-      "email": "john.citizen@example.com",
-      "role": "citizen",
-      "location": {
-        "address": "123 Civic Road",
-        "city": "Bengaluru",
-        "state": "Karnataka",
-        "pincode": "560001",
-        "latitude": 12.9716,
-        "longitude": 77.5946
-      },
-      "verification": {
-        "isVerified": false,
-        "status": "unsubmitted",
-        "documentType": null,
-        "verifiedAt": null
-      },
-      "createdAt": "2026-08-26T15:30:00.000Z",
-      "updatedAt": "2026-08-26T15:30:00.000Z"
+      "status": "active",
+      "mediaUrls": [],
+      "createdAt": "2026-08-28T18:00:00.000Z",
+      "updatedAt": "2026-08-28T18:00:00.000Z"
     }
   }
 }
@@ -321,11 +229,98 @@ Authorization: Bearer <token>
 
 ---
 
-## 🔒 Security Measures
+#### 2. Query Petitions with Search & Filters (`GET /api/petitions`)
+**Query Parameters:**
+- `search=potholes` (searches title, description, and tags)
+- `category=Infrastructure`
+- `city=Bengaluru`
+- `state=Karnataka`
+- `tag=safety`
+- `page=1`
+- `limit=10`
+- `sortBy=createdAt`
+- `order=desc`
 
-1. **Password Hashing:** Passwords are never stored in plaintext. They are salted and hashed using `bcryptjs` with 10 salt rounds in pre-save Mongoose hooks.
-2. **Field Stripping:** The `password` field is configured with `select: false` on Mongoose queries and explicitly deleted during JSON serialization (`toJSON` / `toObject` transforms).
-3. **Environment Isolation:** Secrets (`JWT_SECRET`, `MONGODB_URI`) are loaded via `dotenv` from `.env` which is ignored in Git.
-4. **Input Validation:** Incoming request payloads are validated and sanitized via `express-validator` prior to hitting business logic.
-5. **Generic Error Responses:** Login failures return generic messages (`Invalid email or password`) to prevent account enumeration.
-6. **Role-Based Access Control:** Reusable `authorize('official')` and `authorize('citizen')` middleware guards sensitive routes.
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Petitions retrieved successfully",
+  "data": {
+    "petitions": [
+      {
+        "_id": "67be184b2e8a123456789abc",
+        "title": "Fix Main Street Potholes and Improve Road Safety",
+        "description": "The potholes on Main Street from 1st Cross to 5th Block have become dangerous...",
+        "category": "Infrastructure",
+        "tags": ["roads", "safety", "infrastructure"],
+        "targetSignatures": 250,
+        "signaturesCount": 0,
+        "location": {
+          "city": "Bengaluru",
+          "state": "Karnataka"
+        },
+        "creator": {
+          "_id": "67be0c5f2b84784a9e53b491",
+          "name": "John Citizen",
+          "role": "citizen"
+        },
+        "status": "active",
+        "createdAt": "2026-08-28T18:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 1,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 1,
+      "hasNextPage": false,
+      "hasPrevPage": false
+    }
+  }
+}
+```
+
+---
+
+#### 3. Edit Petition (`PUT /api/petitions/:id`)
+**Headers:** `Authorization: Bearer <token>`
+- **Rule:** Restricted to the creator, and only if `signaturesCount === 0`.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Petition updated successfully",
+  "data": {
+    "petition": { ... }
+  }
+}
+```
+
+---
+
+#### 4. Delete Petition (`DELETE /api/petitions/:id`)
+**Headers:** `Authorization: Bearer <token>`
+- **Rule:** Restricted to the creator, and only if `signaturesCount === 0`.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Petition deleted successfully",
+  "data": {
+    "deleted": true,
+    "id": "67be184b2e8a123456789abc"
+  }
+}
+```
+
+---
+
+## 🔒 Security & Business Rules
+
+1. **Ownership Authorization:** Only the user who created a petition can update or delete it. Non-creators receive `403 Forbidden`.
+2. **Signature Integrity Constraint:** Once a petition receives signatures (`signaturesCount > 0`), it is locked from modification and deletion to protect the integrity of citizen endorsements (`400 Bad Request`).
+3. **Data Sanitization & Indexing:** Full-text and compound indexes ensure performant search across large datasets while preventing injection via structured regex sanitation.
+4. **Zero Sensitive Data Exposure:** Password fields are stripped during query population and serialization.
