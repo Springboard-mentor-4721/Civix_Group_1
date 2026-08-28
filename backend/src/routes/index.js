@@ -15,4 +15,8 @@ router.get('/health', (req, res) => {
 // Authentication routes
 router.use('/auth', authRoutes);
 
+// Petition routes
+const petitionRoutes = require('./petition.routes');
+router.use('/petitions', petitionRoutes);
+
 module.exports = router;
