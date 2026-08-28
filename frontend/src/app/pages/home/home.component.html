@@ -1,0 +1,26 @@
+<section class="home-grid">
+  <div class="home-copy">
+    <p class="eyebrow">Civic participation, made visible</p>
+    <h1>Make your community count.</h1>
+    <p class="lede">Civix connects residents and public officials around the information that keeps neighborhoods moving.</p>
+    @if (auth.currentUser(); as user) {
+      <div class="welcome-note">
+        <span class="status-dot"></span>
+        Signed in as {{ user.name }} · {{ user.role }}
+      </div>
+      <a class="button primary" routerLink="/profile">View your profile</a>
+    } @else {
+      <div class="actions">
+        <a class="button primary" routerLink="/register">Join Civix</a>
+        <a class="button text-button" routerLink="/login">Sign in</a>
+      </div>
+    }
+  </div>
+  <aside class="home-panel">
+    <div class="panel-mark">01</div>
+    <h2>Milestone 1</h2>
+    <p>Your secure Civix identity is the starting point for civic participation.</p>
+    <div class="panel-rule"></div>
+    <span>Identity · Access · Trust</span>
+  </aside>
+</section>
