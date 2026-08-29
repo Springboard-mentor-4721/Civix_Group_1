@@ -11,17 +11,17 @@
             {{ userInitial }}
           </div>
           <div class="name-col">
-            <span class="user-display-name">{{ user?.name || 'User' }}</span>
+            <span class="user-display-name">{{ user?.name || 'Sri' }}</span>
             <span class="verification-tag">
-              <span class="status-dot verified"></span>
-              {{ isOfficial ? 'Official' : 'Citizen' }}
+              <span class="status-dot" [class.verified]="user?.isVerified"></span>
+              {{ user?.isVerified ? 'Verified' : 'Unverified' }} {{ isOfficial ? 'Official' : 'Citizen' }}
             </span>
           </div>
         </div>
 
         <div class="meta-row">
           <span class="ui-icon">📍</span>
-          <span>{{ user?.location?.city || 'Civic Center' }}, {{ user?.location?.state || 'Community' }}</span>
+          <span>{{ user?.location?.city || 'San Diego' }}, {{ user?.location?.state || 'CA' }}</span>
         </div>
 
         <div class="email-row">
@@ -29,7 +29,7 @@
         </div>
       </div>
 
-      <!-- Navigation Links -->
+      <!-- Navigation Links (Dynamic based on Citizen vs. Official) -->
       <nav class="sidebar-nav">
         <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
           <span class="ui-icon">🏠</span>
@@ -68,9 +68,9 @@
           </a>
         }
 
-        <a routerLink="/profile" routerLinkActive="active" class="nav-item">
+        <a routerLink="/settings" routerLinkActive="active" class="nav-item">
           <span class="ui-icon">⚙️</span>
-          Profile & Settings
+          Settings
         </a>
       </nav>
 
@@ -92,7 +92,7 @@
         <div class="welcome-header-content">
           <div>
             <span class="role-portal-badge">{{ isOfficial ? 'OFFICIAL PORTAL' : 'CITIZEN OVERVIEW' }}</span>
-            <h1 class="welcome-title">Welcome back, {{ user?.name || 'Citizen' }}!</h1>
+            <h1 class="welcome-title">Welcome back, {{ user?.name || 'Sri' }}!</h1>
             <p class="welcome-sub">
               {{ isOfficial ? 'Review citizen initiatives, update grievance statuses, and manage department polls.' : "See what's happening in your community and make your voice heard." }}
             </p>
@@ -174,7 +174,7 @@
             <span class="showing-label">Showing for:</span>
             <button class="location-dropdown-btn">
               <span class="ui-icon">📍</span>
-              {{ user?.location?.city || 'Civic Center' }}, {{ user?.location?.state || 'CA' }} ▾
+              {{ user?.location?.city || 'San Diego' }}, {{ user?.location?.state || 'CA' }} ▾
             </button>
           </div>
         </div>

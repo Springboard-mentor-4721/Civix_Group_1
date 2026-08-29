@@ -13,7 +13,7 @@ import { User } from '../../models/api.models';
 })
 export class DashboardComponent implements OnInit {
   user: User | null = null;
-  loading: boolean = false;
+  loading: boolean = true;
   selectedCategory: string = 'All Categories';
 
   categories: string[] = [
@@ -33,8 +33,21 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Read user from AuthService signal
-    this.user = this.authService.currentUser();
+    this.fetchProfile();
+  }
+
+  fetchProfile(): void {
+    this.loading = true;
+
+    this.authService.getCurrentUser().subscribe({
+      next: (res: any) => {
+        this.user = res?.data?.user || res?.data || res;
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
   }
 
   get isOfficial(): boolean {
@@ -42,7 +55,9 @@ export class DashboardComponent implements OnInit {
   }
 
   get userInitial(): string {
-    return this.user?.name ? this.user.name.charAt(0).toUpperCase() : 'U';
+    return this.user?.name
+      ? this.user.name.charAt(0).toUpperCase()
+      : 'U';
   }
 
   setCategory(cat: string): void {

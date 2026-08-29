@@ -35,6 +35,11 @@ export class AuthService {
     );
   }
 
+  // Alias for compatibility
+  getProfile(): Observable<UserResponse> {
+    return this.getCurrentUser();
+  }
+
   restoreSession(): Observable<User | null> {
     const token = this.getToken();
     if (!token) {
