@@ -1,202 +1,427 @@
 <div class="spartan-dashboard-layout">
   <div class="dashboard-grid">
-    
+
     <!-- LEFT SIDEBAR -->
     <aside class="sidebar-column">
-      
+
       <!-- User Profile Card -->
       <div class="profile-card">
         <div class="avatar-row">
           <div class="avatar-circle" [class.official-avatar]="isOfficial">
             {{ userInitial }}
           </div>
+
           <div class="name-col">
-            <span class="user-display-name">{{ user?.name || 'Sri' }}</span>
+            <span class="user-display-name">
+              {{ user?.name || 'Sri' }}
+            </span>
+
             <span class="verification-tag">
-              <span class="status-dot" [class.verified]="user?.isVerified"></span>
-              {{ user?.isVerified ? 'Verified' : 'Unverified' }} {{ isOfficial ? 'Official' : 'Citizen' }}
+              <span class="status-dot verified"></span>
+              {{ isOfficial ? 'Official' : 'Citizen' }}
             </span>
           </div>
         </div>
 
         <div class="meta-row">
           <span class="ui-icon">📍</span>
-          <span>{{ user?.location?.city || 'San Diego' }}, {{ user?.location?.state || 'CA' }}</span>
+          <span>
+            {{ user?.location?.city || 'San Diego' }},
+            {{ user?.location?.state || 'CA' }}
+          </span>
         </div>
 
         <div class="email-row">
-          <span>{{ user?.email || 'user@civix.org' }}</span>
+          <span>
+            {{ user?.email || 'user@civix.org' }}
+          </span>
         </div>
       </div>
 
-      <!-- Navigation Links (Dynamic based on Citizen vs. Official) -->
+
+      <!-- NAVIGATION LINKS -->
       <nav class="sidebar-nav">
-        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
+
+        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-item">
+
           <span class="ui-icon">🏠</span>
           Dashboard
         </a>
 
+
         @if (isOfficial) {
-          <a routerLink="/petitions" routerLinkActive="active" class="nav-item">
-            <span class="ui-icon">📑</span>
-            Review Petitions
-          </a>
-          <a routerLink="/polls" routerLinkActive="active" class="nav-item">
-            <span class="ui-icon">🗳️</span>
-            Manage Polls
-          </a>
-          <a routerLink="/reports" routerLinkActive="active" class="nav-item">
-            <span class="ui-icon">📊</span>
-            Official Reports
-          </a>
+
+        <a routerLink="/petitions" routerLinkActive="active" class="nav-item">
+
+          <span class="ui-icon">📑</span>
+          Review Petitions
+        </a>
+
+        <a routerLink="/polls" routerLinkActive="active" class="nav-item">
+
+          <span class="ui-icon">🗳️</span>
+          Manage Polls
+        </a>
+
+        <a routerLink="/reports" routerLinkActive="active" class="nav-item">
+
+          <span class="ui-icon">📊</span>
+          Official Reports
+        </a>
+
         } @else {
-          <a routerLink="/petitions" routerLinkActive="active" class="nav-item">
-            <span class="ui-icon">📄</span>
-            Petitions
-          </a>
-          <a routerLink="/polls" routerLinkActive="active" class="nav-item">
-            <span class="ui-icon">📊</span>
-            Polls
-          </a>
-          <a routerLink="/officials" routerLinkActive="active" class="nav-item">
-            <span class="ui-icon">👥</span>
-            Officials
-          </a>
-          <a routerLink="/reports" routerLinkActive="active" class="nav-item">
-            <span class="ui-icon">📈</span>
-            Reports
-          </a>
+
+        <a routerLink="/petitions" routerLinkActive="active" class="nav-item">
+
+          <span class="ui-icon">📄</span>
+          Petitions
+        </a>
+
+        <a routerLink="/polls" routerLinkActive="active" class="nav-item">
+
+          <span class="ui-icon">📊</span>
+          Polls
+        </a>
+
+        <a routerLink="/officials" routerLinkActive="active" class="nav-item">
+
+          <span class="ui-icon">👥</span>
+          Officials
+        </a>
+
+        <a routerLink="/reports" routerLinkActive="active" class="nav-item">
+
+          <span class="ui-icon">📈</span>
+          Reports
+        </a>
         }
 
+
         <a routerLink="/settings" routerLinkActive="active" class="nav-item">
+
           <span class="ui-icon">⚙️</span>
           Settings
         </a>
+
       </nav>
 
-      <!-- Bottom Actions -->
+
+      <!-- BOTTOM ACTIONS -->
       <div class="sidebar-footer">
+
         <button type="button" class="btn-logout" (click)="logout()">
+
           <span class="ui-icon">🚪</span>
           Log out
+
         </button>
+
       </div>
 
     </aside>
 
+
     <!-- RIGHT MAIN CONTENT -->
     <main class="content-column">
-      
-      <!-- Welcome Header -->
+
+
+      <!-- WELCOME HEADER -->
       <div class="welcome-card">
+
         <div class="welcome-header-content">
+
           <div>
-            <span class="role-portal-badge">{{ isOfficial ? 'OFFICIAL PORTAL' : 'CITIZEN OVERVIEW' }}</span>
-            <h1 class="welcome-title">Welcome back, {{ user?.name || 'Sri' }}!</h1>
+
+            <span class="role-portal-badge">
+              {{ isOfficial ? 'OFFICIAL PORTAL' : 'CITIZEN OVERVIEW' }}
+            </span>
+
+            <h1 class="welcome-title">
+              Welcome back, {{ user?.name || 'Sri' }}!
+            </h1>
+
             <p class="welcome-sub">
-              {{ isOfficial ? 'Review citizen initiatives, update grievance statuses, and manage department polls.' : "See what's happening in your community and make your voice heard." }}
+              {{
+              isOfficial
+              ? 'Review citizen initiatives, update grievance statuses, and manage department polls.'
+              : "See what's happening in your community and make your voice heard."
+              }}
             </p>
+
           </div>
+
+
           <div class="header-action-btn-wrapper">
+
             @if (isOfficial) {
-              <button class="primary-action-btn" routerLink="/polls">+ Create Municipal Poll</button>
+
+            <button class="primary-action-btn" routerLink="/polls">
+
+              + Create Municipal Poll
+
+            </button>
+
             } @else {
-              <button class="primary-action-btn" routerLink="/petitions">+ Start a Petition</button>
+
+            <button class="primary-action-btn" routerLink="/petitions">
+
+              + Start a Petition
+
+            </button>
+
             }
+
           </div>
+
         </div>
+
       </div>
 
-      <!-- Stat Counter Cards -->
+
+      <!-- STAT COUNTER CARDS -->
       <div class="stats-row">
+
         @if (isOfficial) {
-          <div class="stat-box">
-            <div class="stat-top">
-              <span class="stat-label">Petitions Pending Review</span>
-              <span class="ui-icon">📑</span>
-            </div>
-            <div class="stat-value">0</div>
-            <span class="stat-footer-text">awaiting response</span>
+
+        <!-- OFFICIAL CARD 1 -->
+        <a class="stat-box stat-link" routerLink="/petitions">
+
+          <div class="stat-top">
+
+            <span class="stat-label">
+              Petitions Pending Review
+            </span>
+
+            <span class="ui-icon">
+              📑
+            </span>
+
           </div>
 
-          <div class="stat-box">
-            <div class="stat-top">
-              <span class="stat-label">Resolved Grievances</span>
-              <span class="ui-icon">✅</span>
-            </div>
-            <div class="stat-value">0</div>
-            <span class="stat-footer-text">completed actions</span>
+          <div class="stat-value">
+            0
           </div>
 
-          <div class="stat-box">
-            <div class="stat-top">
-              <span class="stat-label">Active Municipal Polls</span>
-              <span class="ui-icon">🗳️</span>
-            </div>
-            <div class="stat-value">0</div>
-            <span class="stat-footer-text">live feedback</span>
+          <span class="stat-footer-text">
+            awaiting response
+          </span>
+
+        </a>
+
+
+        <!-- OFFICIAL CARD 2 -->
+        <a class="stat-box stat-link" routerLink="/reports">
+
+          <div class="stat-top">
+
+            <span class="stat-label">
+              Resolved Grievances
+            </span>
+
+            <span class="ui-icon">
+              ✅
+            </span>
+
           </div>
+
+          <div class="stat-value">
+            0
+          </div>
+
+          <span class="stat-footer-text">
+            completed actions
+          </span>
+
+        </a>
+
+
+        <!-- OFFICIAL CARD 3 -->
+        <a class="stat-box stat-link" routerLink="/polls">
+
+          <div class="stat-top">
+
+            <span class="stat-label">
+              Active Municipal Polls
+            </span>
+
+            <span class="ui-icon">
+              🗳️
+            </span>
+
+          </div>
+
+          <div class="stat-value">
+            0
+          </div>
+
+          <span class="stat-footer-text">
+            live feedback
+          </span>
+
+        </a>
+
+
         } @else {
-          <div class="stat-box">
-            <div class="stat-top">
-              <span class="stat-label">My Petitions</span>
-              <span class="ui-icon">📄</span>
-            </div>
-            <div class="stat-value">0</div>
-            <span class="stat-footer-text">petitions</span>
+
+
+        <!-- CITIZEN CARD 1 -->
+        <a class="stat-box stat-link" routerLink="/petitions">
+
+          <div class="stat-top">
+
+            <span class="stat-label">
+              My Petitions
+            </span>
+
+            <span class="ui-icon">
+              📄
+            </span>
+
           </div>
 
-          <div class="stat-box">
-            <div class="stat-top">
-              <span class="stat-label">Successful Petitions</span>
-              <span class="ui-icon">📈</span>
-            </div>
-            <div class="stat-value">0</div>
-            <span class="stat-footer-text">or under review</span>
+          <div class="stat-value">
+            0
           </div>
 
-          <div class="stat-box">
-            <div class="stat-top">
-              <span class="stat-label">Polls Participated</span>
-              <span class="ui-icon">📊</span>
-            </div>
-            <div class="stat-value">0</div>
-            <span class="stat-footer-text">civic votes</span>
+          <span class="stat-footer-text">
+            petitions
+          </span>
+
+        </a>
+
+
+        <!-- CITIZEN CARD 2 -->
+        <a class="stat-box stat-link" routerLink="/petitions">
+
+          <div class="stat-top">
+
+            <span class="stat-label">
+              Successful Petitions
+            </span>
+
+            <span class="ui-icon">
+              📈
+            </span>
+
           </div>
+
+          <div class="stat-value">
+            0
+          </div>
+
+          <span class="stat-footer-text">
+            or under review
+          </span>
+
+        </a>
+
+
+        <!-- CITIZEN CARD 3 -->
+        <a class="stat-box stat-link" routerLink="/polls">
+
+          <div class="stat-top">
+
+            <span class="stat-label">
+              Polls Participated
+            </span>
+
+            <span class="ui-icon">
+              📊
+            </span>
+
+          </div>
+
+          <div class="stat-value">
+            0
+          </div>
+
+          <span class="stat-footer-text">
+            civic votes
+          </span>
+
+        </a>
+
         }
+
       </div>
 
-      <!-- Feed Section -->
+
+      <!-- FEED SECTION -->
       <section class="feed-section">
+
         <div class="feed-header">
-          <h2 class="feed-title">{{ isOfficial ? 'Incoming Petitions for Department Review' : 'Active Petitions Near You' }}</h2>
+
+          <h2 class="feed-title">
+            {{
+            isOfficial
+            ? 'Incoming Petitions for Department Review'
+            : 'Active Petitions Near You'
+            }}
+          </h2>
+
+
           <div class="location-filter">
-            <span class="showing-label">Showing for:</span>
+
+            <span class="showing-label">
+              Showing for:
+            </span>
+
             <button class="location-dropdown-btn">
-              <span class="ui-icon">📍</span>
-              {{ user?.location?.city || 'San Diego' }}, {{ user?.location?.state || 'CA' }} ▾
+
+              <span class="ui-icon">
+                📍
+              </span>
+
+              {{ user?.location?.city || 'San Diego' }},
+              {{ user?.location?.state || 'CA' }}
+
+              ▾
+
             </button>
+
           </div>
+
         </div>
 
-        <!-- Category Filter Pills -->
+
+        <!-- CATEGORY FILTER PILLS -->
         <div class="category-pills">
+
           @for (cat of categories; track cat) {
-            <button 
-              type="button"
-              class="pill-btn" 
-              [class.active]="selectedCategory === cat"
-              (click)="setCategory(cat)">
-              {{ cat }}
-            </button>
+
+          <button type="button" class="pill-btn" [class.active]="selectedCategory === cat" (click)="setCategory(cat)">
+
+            {{ cat }}
+
+          </button>
+
           }
+
         </div>
 
-        <!-- Empty State Container -->
+
+        <!-- EMPTY STATE -->
         <div class="empty-state-card">
-          <p class="empty-text">{{ isOfficial ? 'No petitions pending action in this category.' : 'No petitions found with the current filters.' }}</p>
-          <button class="clear-filters-btn" (click)="clearFilters()">Clear Filters</button>
+
+          <p class="empty-text">
+
+            {{
+            isOfficial
+            ? 'No petitions pending action in this category.'
+            : 'No petitions found with the current filters.'
+            }}
+
+          </p>
+
+          <button class="clear-filters-btn" (click)="clearFilters()">
+
+            Clear Filters
+
+          </button>
+
         </div>
+
       </section>
 
     </main>

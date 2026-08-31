@@ -1,1 +1,350 @@
-<p>settings works!</p>
+<div class="settings-page">
+
+  <!-- HEADER -->
+  <section class="page-header">
+
+    <div>
+      <span class="eyebrow">ACCOUNT MANAGEMENT</span>
+
+      <h1>Settings</h1>
+
+      <p>
+        Manage your profile, notifications, and privacy preferences.
+      </p>
+    </div>
+
+  </section>
+
+
+  <div class="settings-layout">
+
+    <!-- LEFT NAVIGATION -->
+    <aside class="settings-nav">
+
+      <div class="settings-nav-title">
+        SETTINGS
+      </div>
+
+      <a class="settings-nav-item active">
+        <span>👤</span>
+        Profile
+      </a>
+
+      <a class="settings-nav-item">
+        <span>🔔</span>
+        Notifications
+      </a>
+
+      <a class="settings-nav-item">
+        <span>🔒</span>
+        Privacy
+      </a>
+
+    </aside>
+
+
+    <!-- MAIN SETTINGS -->
+    <main class="settings-content">
+
+      <!-- PROFILE -->
+      <section class="settings-card">
+
+        <div class="card-heading">
+
+          <div>
+            <span class="section-label">PROFILE</span>
+
+            <h2>Profile Information</h2>
+
+            <p>
+              Update the information associated with your Civix account.
+            </p>
+          </div>
+
+          <div class="profile-avatar">
+            {{ fullName.charAt(0).toUpperCase() }}
+          </div>
+
+        </div>
+
+
+        <div class="form-grid">
+
+          <!-- NAME -->
+          <div class="form-group">
+
+            <label>Full Name</label>
+
+            <input
+              type="text"
+              [(ngModel)]="fullName"
+              placeholder="Enter your full name">
+
+          </div>
+
+
+          <!-- EMAIL -->
+          <div class="form-group">
+
+            <label>Email Address</label>
+
+            <input
+              type="email"
+              [(ngModel)]="email"
+              placeholder="Enter your email">
+
+          </div>
+
+
+          <!-- PHONE -->
+          <div class="form-group">
+
+            <label>Phone Number</label>
+
+            <input
+              type="tel"
+              [(ngModel)]="phone"
+              placeholder="Enter your phone number">
+
+          </div>
+
+
+          <!-- CITY -->
+          <div class="form-group">
+
+            <label>City</label>
+
+            <input
+              type="text"
+              [(ngModel)]="city"
+              placeholder="Enter your city">
+
+          </div>
+
+
+          <!-- STATE -->
+          <div class="form-group">
+
+            <label>State</label>
+
+            <input
+              type="text"
+              [(ngModel)]="state"
+              placeholder="Enter your state">
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- NOTIFICATIONS -->
+      <section class="settings-card">
+
+        <div class="card-heading">
+
+          <div>
+            <span class="section-label">NOTIFICATIONS</span>
+
+            <h2>Notification Preferences</h2>
+
+            <p>
+              Choose which civic updates you want to receive.
+            </p>
+          </div>
+
+          <div class="heading-icon">
+            🔔
+          </div>
+
+        </div>
+
+
+        <div class="toggle-list">
+
+          <!-- EMAIL -->
+          <div class="toggle-row">
+
+            <div class="toggle-info">
+
+              <h3>Email Notifications</h3>
+
+              <p>
+                Receive important updates and announcements by email.
+              </p>
+
+            </div>
+
+            <label class="switch">
+
+              <input
+                type="checkbox"
+                [(ngModel)]="emailNotifications">
+
+              <span class="slider"></span>
+
+            </label>
+
+          </div>
+
+
+          <!-- POLLS -->
+          <div class="toggle-row">
+
+            <div class="toggle-info">
+
+              <h3>Poll Notifications</h3>
+
+              <p>
+                Get notified when relevant community polls are available.
+              </p>
+
+            </div>
+
+            <label class="switch">
+
+              <input
+                type="checkbox"
+                [(ngModel)]="pollNotifications">
+
+              <span class="slider"></span>
+
+            </label>
+
+          </div>
+
+
+          <!-- PETITIONS -->
+          <div class="toggle-row">
+
+            <div class="toggle-info">
+
+              <h3>Petition Notifications</h3>
+
+              <p>
+                Receive updates about petitions you support or create.
+              </p>
+
+            </div>
+
+            <label class="switch">
+
+              <input
+                type="checkbox"
+                [(ngModel)]="petitionNotifications">
+
+              <span class="slider"></span>
+
+            </label>
+
+          </div>
+
+
+          <!-- REPORTS -->
+          <div class="toggle-row">
+
+            <div class="toggle-info">
+
+              <h3>Report Notifications</h3>
+
+              <p>
+                Receive updates when the status of your reports changes.
+              </p>
+
+            </div>
+
+            <label class="switch">
+
+              <input
+                type="checkbox"
+                [(ngModel)]="reportNotifications">
+
+              <span class="slider"></span>
+
+            </label>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- PRIVACY -->
+      <section class="settings-card">
+
+        <div class="card-heading">
+
+          <div>
+            <span class="section-label">PRIVACY</span>
+
+            <h2>Privacy Settings</h2>
+
+            <p>
+              Control how your profile information is displayed.
+            </p>
+          </div>
+
+          <div class="heading-icon">
+            🔒
+          </div>
+
+        </div>
+
+
+        <div class="toggle-row privacy-row">
+
+          <div class="toggle-info">
+
+            <h3>Private Account</h3>
+
+            <p>
+              Limit your profile information to authorized users.
+            </p>
+
+          </div>
+
+          <label class="switch">
+
+            <input
+              type="checkbox"
+              [(ngModel)]="privateAccount">
+
+            <span class="slider"></span>
+
+          </label>
+
+        </div>
+
+      </section>
+
+
+      <!-- ACTIONS -->
+      <div class="settings-actions">
+
+        <button
+          class="reset-btn"
+          type="button"
+          (click)="resetChanges()">
+
+          Reset
+
+        </button>
+
+        <button
+          class="save-btn"
+          type="button"
+          (click)="saveChanges()">
+
+          Save Changes
+
+        </button>
+
+      </div>
+
+    </main>
+
+  </div>
+
+</div>

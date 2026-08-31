@@ -1,1 +1,281 @@
-<p>officials works!</p>
+<div class="officials-page">
+
+  <!-- HEADER -->
+  <section class="page-header">
+
+    <div>
+
+      <span class="eyebrow">
+        CIVIC REPRESENTATION
+      </span>
+
+      <h1>
+        Officials
+      </h1>
+
+      <p>
+        Find public officials and civic departments serving
+        your community.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- SEARCH + FILTERS -->
+  <section class="filter-section">
+
+    <div class="search-box">
+
+      <span class="search-icon">
+        🔍
+      </span>
+
+      <input
+        type="text"
+        placeholder="Search officials..."
+        [(ngModel)]="searchText">
+
+    </div>
+
+
+    <div class="filter-box">
+
+      <span>
+        🏛️
+      </span>
+
+      <select
+        [(ngModel)]="selectedDepartment">
+
+        @for (
+          department of departments;
+          track department
+        ) {
+
+          <option [value]="department">
+            {{ department }}
+          </option>
+
+        }
+
+      </select>
+
+    </div>
+
+
+    <div class="filter-box">
+
+      <span>
+        📍
+      </span>
+
+      <select
+        [(ngModel)]="selectedLocation">
+
+        @for (
+          location of locations;
+          track location
+        ) {
+
+          <option [value]="location">
+            {{ location }}
+          </option>
+
+        }
+
+      </select>
+
+    </div>
+
+
+    <button
+      class="clear-btn"
+      (click)="clearFilters()">
+
+      Clear Filters
+
+    </button>
+
+  </section>
+
+
+  <!-- RESULT COUNT -->
+  <div class="results-header">
+
+    <span>
+      Showing
+      <strong>
+        {{ filteredOfficials.length }}
+      </strong>
+      officials
+    </span>
+
+  </div>
+
+
+  <!-- OFFICIAL CARDS -->
+  <section class="official-grid">
+
+    @for (
+      official of filteredOfficials;
+      track official.email
+    ) {
+
+      <article class="official-card">
+
+        <!-- CARD HEADER -->
+        <div class="official-header">
+
+          <div class="official-avatar">
+            {{ official.initials }}
+          </div>
+
+
+          <div class="official-info">
+
+            <h2>
+              {{ official.name }}
+            </h2>
+
+            <p class="official-role">
+              {{ official.role }}
+            </p>
+
+          </div>
+
+
+          <span class="status-badge">
+            {{ official.status }}
+          </span>
+
+        </div>
+
+
+        <!-- DETAILS -->
+        <div class="official-details">
+
+          <div class="detail-row">
+
+            <span class="detail-icon">
+              🏛️
+            </span>
+
+            <div>
+
+              <small>
+                DEPARTMENT
+              </small>
+
+              <p>
+                {{ official.department }}
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="detail-row">
+
+            <span class="detail-icon">
+              📍
+            </span>
+
+            <div>
+
+              <small>
+                SERVING
+              </small>
+
+              <p>
+                {{ official.location }}
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="detail-row">
+
+            <span class="detail-icon">
+              ✉️
+            </span>
+
+            <div>
+
+              <small>
+                EMAIL
+              </small>
+
+              <p>
+                {{ official.email }}
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+        <div class="official-actions">
+
+          <a
+            class="contact-btn"
+            [href]="'mailto:' + official.email">
+
+            Contact Official
+
+          </a>
+
+          <a
+            class="phone-btn"
+            [href]="'tel:' + official.phone">
+
+            ☎
+
+          </a>
+
+        </div>
+
+      </article>
+
+    }
+
+
+    <!-- EMPTY STATE -->
+    @if (filteredOfficials.length === 0) {
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          👥
+        </div>
+
+        <h2>
+          No Officials Found
+        </h2>
+
+        <p>
+          Try changing your search or filters.
+        </p>
+
+        <button
+          class="clear-btn"
+          (click)="clearFilters()">
+
+          Clear Filters
+
+        </button>
+
+      </div>
+
+    }
+
+  </section>
+
+</div>

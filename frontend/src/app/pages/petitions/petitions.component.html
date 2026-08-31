@@ -1,1 +1,214 @@
-<p>petitions works!</p>
+<div class="petitions-page">
+
+  <!-- Header -->
+  <section class="page-header">
+
+    <div>
+      <span class="eyebrow">CIVIC PARTICIPATION</span>
+
+      <h1>Petitions</h1>
+
+      <p>
+        Discover, support, and create petitions that can make a difference
+        in your community.
+      </p>
+    </div>
+
+    <button class="create-btn">
+      + Create Petition
+    </button>
+
+  </section>
+
+
+  <!-- Tabs -->
+  <div class="tabs">
+
+    <button
+      [class.active]="activeTab === 'all'"
+      (click)="setTab('all')">
+      All Petitions
+    </button>
+
+    <button
+      [class.active]="activeTab === 'my'"
+      (click)="setTab('my')">
+      My Petitions
+    </button>
+
+    <button
+      [class.active]="activeTab === 'signed'"
+      (click)="setTab('signed')">
+      Signed by Me
+    </button>
+
+  </div>
+
+
+  <!-- Filters -->
+  <section class="filters">
+
+    <div class="search-box">
+      <span>⌕</span>
+
+      <input
+        type="text"
+        placeholder="Search petitions..."
+        (input)="onSearch($event)">
+    </div>
+
+
+    <select (change)="onLocationChange($event)">
+      @for (location of locations; track location) {
+        <option [value]="location">
+          {{ location }}
+        </option>
+      }
+    </select>
+
+
+    <select (change)="onCategoryChange($event)">
+      @for (category of categories; track category) {
+        <option [value]="category">
+          {{ category }}
+        </option>
+      }
+    </select>
+
+
+    <select (change)="onStatusChange($event)">
+      @for (status of statuses; track status) {
+        <option [value]="status">
+          {{ status === 'All' ? 'All Statuses' : status }}
+        </option>
+      }
+    </select>
+
+  </section>
+
+
+  <!-- Petition cards -->
+  <section class="petition-grid">
+
+    @for (petition of filteredPetitions; track petition.title) {
+
+      <article class="petition-card">
+
+        <div class="card-top">
+
+          <div class="petition-meta">
+            <span class="category">
+              {{ petition.category }}
+            </span>
+
+            <span>•</span>
+
+            <span>
+              {{ petition.location }}
+            </span>
+          </div>
+
+          <span
+            class="status"
+            [class.active-status]="petition.status === 'ACTIVE'"
+            [class.review-status]="petition.status === 'UNDER REVIEW'"
+            [class.closed-status]="petition.status === 'CLOSED'">
+
+            {{ petition.status }}
+
+          </span>
+
+        </div>
+
+
+        <h2>
+          {{ petition.title }}
+        </h2>
+
+
+        <p class="description">
+          {{ petition.description }}
+        </p>
+
+
+        <!-- Progress -->
+        <div class="progress-section">
+
+          <div class="progress-info">
+
+            <span>
+              {{ petition.signatures }} / {{ petition.goal }} signatures
+            </span>
+
+            <strong>
+              {{ getProgress(petition) }}%
+            </strong>
+
+          </div>
+
+          <div class="progress-bar">
+
+            <div
+              class="progress-fill"
+              [style.width.%]="getProgress(petition)">
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Action -->
+        <button
+          class="sign-btn"
+          [disabled]="petition.status === 'CLOSED'">
+
+          {{
+            petition.status === 'CLOSED'
+              ? 'Petition Closed'
+              : 'View & Sign Petition'
+          }}
+
+        </button>
+
+
+        <div class="card-footer">
+          Created on {{ petition.createdDate }}
+        </div>
+
+      </article>
+
+    }
+
+
+    <!-- Empty state -->
+    @if (filteredPetitions.length === 0) {
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          📋
+        </div>
+
+        <h2>No Petitions Found</h2>
+
+        <p>
+          No petitions match your current filters.
+          Try changing your search or filters.
+        </p>
+
+        <button
+          class="clear-btn"
+          (click)="clearFilters()">
+
+          Clear Filters
+
+        </button>
+
+      </div>
+
+    }
+
+  </section>
+
+</div>

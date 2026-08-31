@@ -1,1 +1,468 @@
-<p>polls works!</p>
+<div class="polls-page">
+
+  <!-- HEADER -->
+  <section class="page-header">
+
+    <div>
+      <span class="eyebrow">PUBLIC VOICE</span>
+
+      <h1>Polls</h1>
+
+      <p>
+        Participate in community polls and share your voice on issues
+        that matter to your neighborhood.
+      </p>
+    </div>
+
+    <button
+      class="create-btn"
+      (click)="openCreatePoll()">
+
+      + Create Poll
+
+    </button>
+
+  </section>
+
+
+  <!-- TABS -->
+  <div class="tabs">
+
+    <button
+      [class.active]="activeTab === 'active'"
+      (click)="selectTab('active')">
+
+      Active
+
+    </button>
+
+    <button
+      [class.active]="activeTab === 'voted'"
+      (click)="selectTab('voted')">
+
+      Voted on
+
+    </button>
+
+    <button
+      [class.active]="activeTab === 'my'"
+      (click)="selectTab('my')">
+
+      My Polls
+
+    </button>
+
+    <button
+      [class.active]="activeTab === 'closed'"
+      (click)="selectTab('closed')">
+
+      Closed
+
+    </button>
+
+  </div>
+
+
+  <!-- FILTERS -->
+  <section class="filters">
+
+    <div class="filter-item">
+
+      <span class="filter-icon">📍</span>
+
+      <select
+        [value]="selectedLocation"
+        (change)="selectedLocation = $any($event.target).value">
+
+        @for (location of locations; track location) {
+
+          <option [value]="location">
+            {{ location }}
+          </option>
+
+        }
+
+      </select>
+
+    </div>
+
+
+    <div class="filter-item">
+
+      <span class="filter-icon">⚑</span>
+
+      <select
+        [value]="selectedCategory"
+        (change)="selectedCategory = $any($event.target).value">
+
+        @for (category of categories; track category) {
+
+          <option [value]="category">
+            {{ category }}
+          </option>
+
+        }
+
+      </select>
+
+    </div>
+
+
+    <button
+      class="clear-btn"
+      (click)="clearFilters()">
+
+      Clear Filters
+
+    </button>
+
+  </section>
+
+
+  <!-- POLLS -->
+  <section class="poll-list">
+
+    @for (poll of filteredPolls; track poll.question) {
+
+      <article class="poll-card">
+
+        <!-- TOP -->
+        <div class="poll-top">
+
+          <div class="poll-main">
+
+            <h2>
+              {{ poll.question }}
+            </h2>
+
+            <p class="description">
+              {{ poll.description }}
+            </p>
+
+            <div class="meta">
+
+              <span>
+                <strong>CATEGORY:</strong>
+                {{ poll.category }}
+              </span>
+
+              <span>
+                📍
+                <strong>LOCATION:</strong>
+                {{ poll.location }}
+              </span>
+
+              <span>
+                👤
+                <strong>CREATED BY:</strong>
+                {{ poll.createdBy }}
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="poll-stats">
+
+            <strong>
+              {{ poll.totalVotes }} votes
+            </strong>
+
+            @if (poll.status === 'ACTIVE') {
+
+              <span>
+                Closes {{ poll.closesOn }}
+              </span>
+
+            } @else {
+
+              <span class="closed">
+                Closed
+              </span>
+
+            }
+
+          </div>
+
+        </div>
+
+
+        <!-- ACTIVE POLL -->
+        @if (poll.status === 'ACTIVE') {
+
+          <div class="options">
+
+            @for (option of poll.options; track option.text) {
+
+              <label
+                class="option"
+                [class.selected]="
+                  selectedOptions[poll.question] === option.text
+                ">
+
+                <input
+                  type="radio"
+                  [name]="poll.question"
+                  [value]="option.text"
+                  [checked]="
+                    selectedOptions[poll.question] === option.text
+                  "
+                  (change)="selectOption(poll, option)">
+
+                <span>
+                  {{ option.text }}
+                </span>
+
+              </label>
+
+            }
+
+          </div>
+
+
+          <button
+            class="vote-btn"
+            (click)="submitVote(poll)">
+
+            Submit Vote
+
+          </button>
+
+        }
+
+
+        <!-- RESULTS -->
+        @if (poll.status === 'CLOSED') {
+
+          <div class="results">
+
+            <h3>
+              Results
+            </h3>
+
+            @for (option of poll.options; track option.text) {
+
+              <div class="result-row">
+
+                <div class="result-info">
+
+                  <span>
+                    {{ option.text }}
+                  </span>
+
+                  <strong>
+                    {{ getPercentage(option, poll) }}%
+                    ({{ option.votes }})
+                  </strong>
+
+                </div>
+
+
+                <div class="result-bar">
+
+                  <div
+                    class="result-fill"
+                    [style.width.%]="getPercentage(option, poll)">
+                  </div>
+
+                </div>
+
+              </div>
+
+            }
+
+          </div>
+
+        }
+
+      </article>
+
+    }
+
+
+    <!-- EMPTY STATE -->
+    @if (filteredPolls.length === 0) {
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          📊
+        </div>
+
+        <h2>
+          No Polls Found
+        </h2>
+
+        <p>
+          Try adjusting your location or category filters.
+        </p>
+
+        <button
+          class="clear-btn"
+          (click)="clearFilters()">
+
+          Clear Filters
+
+        </button>
+
+      </div>
+
+    }
+
+  </section>
+
+</div>
+
+
+<!-- CREATE POLL MODAL -->
+
+@if (showCreateModal) {
+
+  <div
+    class="modal-overlay"
+    (click)="closeCreatePoll()">
+
+    <div
+      class="create-modal"
+      (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+
+        <div>
+
+          <span class="eyebrow">
+            PUBLIC FEEDBACK
+          </span>
+
+          <h2>
+            Create New Poll
+          </h2>
+
+        </div>
+
+        <button
+          class="close-btn"
+          (click)="closeCreatePoll()">
+
+          ×
+
+        </button>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          Poll Question
+        </label>
+
+        <input
+          type="text"
+          placeholder="Enter your poll question">
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          Description
+        </label>
+
+        <textarea
+          rows="4"
+          placeholder="Explain what you want the community to decide">
+        </textarea>
+
+      </div>
+
+
+      <div class="form-row">
+
+        <div class="form-group">
+
+          <label>
+            Category
+          </label>
+
+          <select>
+
+            <option>
+              Select Category
+            </option>
+
+            @for (
+              category of categories.slice(1);
+              track category
+            ) {
+
+              <option>
+                {{ category }}
+              </option>
+
+            }
+
+          </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            Location
+          </label>
+
+          <input
+            type="text"
+            placeholder="e.g. Delhi">
+
+        </div>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          Poll Options
+        </label>
+
+        <input
+          type="text"
+          placeholder="Option 1">
+
+        <input
+          type="text"
+          placeholder="Option 2">
+
+      </div>
+
+
+      <div class="modal-actions">
+
+        <button
+          class="cancel-btn"
+          (click)="closeCreatePoll()">
+
+          Cancel
+
+        </button>
+
+        <button
+          class="save-btn"
+          (click)="closeCreatePoll()">
+
+          Create Poll
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+}
