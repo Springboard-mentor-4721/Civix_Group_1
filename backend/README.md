@@ -321,6 +321,34 @@ Authorization: Bearer <token>
 
 ---
 
+### 5. Change Password
+- **Endpoint:** `POST /api/auth/change-password`
+- **Access:** Protected (Requires `Authorization: Bearer <token>`)
+- **Description:** Allows the authenticated user to securely change their password by verifying their current password.
+
+**Headers:**
+```http
+Authorization: Bearer <token>
+```
+
+**Request Body:**
+```json
+{
+  "currentPassword": "CurrentPassword123!",
+  "newPassword": "NewSecurePassword456!"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Password changed successfully"
+}
+```
+
+---
+
 ## 🔒 Security Measures
 
 1. **Password Hashing:** Passwords are never stored in plaintext. They are salted and hashed using `bcryptjs` with 10 salt rounds in pre-save Mongoose hooks.

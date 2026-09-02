@@ -324,6 +324,157 @@ describe('Civix Phase 1 Backend API Tests', () => {
     });
   });
 
+  describe('Change Password (POST /api/auth/change-password)', () => {
+    let userToken;
+
+    beforeEach(async () => {
+      const regRes = await request(app).post('/api/auth/register').send({
+        name: 'Change Password User',
+        email: 'changepass@example.com',
+        password: 'InitialPassword123!',
+        role: 'citizen'
+      });
+      userToken = regRes.body.data.token;
+    });
+
+    it('should successfully change password with valid current and new password', async () => {
+      const res = await request(app)
+        .post('/api/auth/change-password')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          currentPassword: 'InitialPassword123!',
+          newPassword: 'BrandNewPassword456!'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Password changed successfully');
+    });
+
+    it('should reject change password when current password is missing', async () => {
+      const res = await request(app)
+        .post('/api/auth/change-password')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          newPassword: 'BrandNewPassword456!'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors).toBeDefined();
+    });
+
+    it('should reject change password when new password is missing', async () => {
+      const res = await request(app)
+        .post('/api/auth/change-password')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          currentPassword: 'InitialPassword123!'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors).toBeDefined();
+    });
+
+    it('should reject change password when current password is wrong', async () => {
+      const res = await request(app)
+        .post('/api/auth/change-password')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          currentPassword: 'IncorrectOldPassword999!',
+          newPassword: 'BrandNewPassword456!'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('Current password is incorrect');
+    });
+
+    it('should reject change password when new password is shorter than 6 characters', async () => {
+      const res = await request(app)
+        .post('/api/auth/change-password')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          currentPassword: 'InitialPassword123!',
+          newPassword: '123'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors).toBeDefined();
+    });
+
+    it('should reject change password when new password is same as current password', async () => {
+      const res = await request(app)
+        .post('/api/auth/change-password')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          currentPassword: 'InitialPassword123!',
+          newPassword: 'InitialPassword123!'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(JSON.stringify(res.body)).toContain('different');
+    });
+
+    it('should reject change password without authentication token', async () => {
+      const res = await request(app)
+        .post('/api/auth/change-password')
+        .send({
+          currentPassword: 'InitialPassword123!',
+          newPassword: 'BrandNewPassword456!'
+        });
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should allow login with new password and reject old password after change', async () => {
+      // 1. Change password
+      const changeRes = await request(app)
+        .post('/api/auth/change-password')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          currentPassword: 'InitialPassword123!',
+          newPassword: 'BrandNewPassword456!'
+        });
+      expect(changeRes.status).toBe(200);
+
+      // 2. Old password should fail
+      const oldLoginRes = await request(app).post('/api/auth/login').send({
+        email: 'changepass@example.com',
+        password: 'InitialPassword123!'
+      });
+      expect(oldLoginRes.status).toBe(401);
+
+      // 3. New password should succeed
+      const newLoginRes = await request(app).post('/api/auth/login').send({
+        email: 'changepass@example.com',
+        password: 'BrandNewPassword456!'
+      });
+      expect(newLoginRes.status).toBe(200);
+      expect(newLoginRes.body.success).toBe(true);
+      expect(newLoginRes.body.data).toHaveProperty('token');
+    });
+
+    it('should never expose password or hash in change password response', async () => {
+      const res = await request(app)
+        .post('/api/auth/change-password')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          currentPassword: 'InitialPassword123!',
+          newPassword: 'BrandNewPassword456!'
+        });
+
+      expect(res.status).toBe(200);
+      expect(JSON.stringify(res.body)).not.toContain('BrandNewPassword456!');
+      expect(JSON.stringify(res.body)).not.toContain('InitialPassword123!');
+      expect(res.body.data).toBeUndefined();
+    });
+  });
+
   describe('Role Authorization Middleware', () => {
     let citizenToken;
     let officialToken;
