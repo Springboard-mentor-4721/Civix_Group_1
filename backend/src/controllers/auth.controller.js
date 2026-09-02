@@ -38,6 +38,19 @@ class AuthController {
       next(error);
     }
   }
+
+  /**
+   * Change user password
+   */
+  async changePassword(req, res, next) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      await authService.changePassword(req.user._id, currentPassword, newPassword);
+      return sendSuccess(res, 200, 'Password changed successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new AuthController();

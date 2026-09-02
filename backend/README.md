@@ -150,6 +150,7 @@ All endpoints are prefixed with `/api`.
 | `POST` | `/api/auth/register` | Public | Register `citizen` or `official` with location & verification state |
 | `POST` | `/api/auth/login` | Public | Authenticate user & return signed JWT with safe user profile |
 | `GET` | `/api/auth/me` | Protected | Retrieve authenticated user profile (Bearer token) |
+| `POST` | `/api/auth/change-password` | Protected | Change password for authenticated user |
 
 ---
 
