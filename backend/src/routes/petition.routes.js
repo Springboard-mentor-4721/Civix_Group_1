@@ -20,6 +20,7 @@ router.post('/', authenticate, createPetitionValidator, validate, petitionContro
 
 // Single petition routes
 router.get('/:id', petitionIdValidator, validate, petitionController.getPetitionById);
+router.post('/:id/sign', authenticate, petitionIdValidator, validate, petitionController.signPetition);
 router.put('/:id', authenticate, updatePetitionValidator, validate, petitionController.updatePetition);
 router.delete('/:id', authenticate, petitionIdValidator, validate, petitionController.deletePetition);
 

@@ -77,6 +77,18 @@ class PetitionController {
       next(error);
     }
   }
+
+  /**
+   * Sign a petition
+   */
+  async signPetition(req, res, next) {
+    try {
+      const result = await petitionService.signPetition(req.params.id, req.user._id);
+      return sendSuccess(res, 200, 'Petition signed successfully', result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new PetitionController();

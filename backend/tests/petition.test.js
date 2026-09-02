@@ -4,6 +4,7 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../src/app');
 const User = require('../src/models/user.model');
 const Petition = require('../src/models/petition.model');
+const Signature = require('../src/models/signature.model');
 
 let mongoServer;
 let citizenUser;
@@ -32,6 +33,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await User.deleteMany({});
   await Petition.deleteMany({});
+  await Signature.deleteMany({});
 
   // Setup citizen 1
   const citizenRes = await request(app).post('/api/auth/register').send({
@@ -378,6 +380,164 @@ describe('Civix Milestone 2: Petition Creation & Management API Tests', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
+    });
+  });
+
+  describe('Sign Petition (POST /api/petitions/:id/sign)', () => {
+    let activePetition;
+    let closedPetition;
+    let draftPetition;
+
+    beforeEach(async () => {
+      activePetition = await Petition.create({
+        title: 'Install Traffic Signal at High-Risk Junction',
+        description: 'Frequent accidents occur at the bypass junction. An automated traffic signal is urgently required.',
+        category: 'Transportation',
+        tags: ['traffic', 'safety'],
+        targetSignatures: 100,
+        signaturesCount: 0,
+        location: { city: 'Bengaluru', state: 'Karnataka' },
+        creator: citizenUser._id,
+        status: 'active'
+      });
+
+      closedPetition = await Petition.create({
+        title: 'Closed Civic Proposal for Old Bridge Repair',
+        description: 'This petition was closed after administrative review and cannot be signed.',
+        category: 'Infrastructure',
+        targetSignatures: 50,
+        signaturesCount: 5,
+        location: { city: 'Bengaluru', state: 'Karnataka' },
+        creator: citizenUser._id,
+        status: 'closed'
+      });
+
+      draftPetition = await Petition.create({
+        title: 'Unpublished Draft Proposal for City Park',
+        description: 'This is a draft proposal that is not yet active or public.',
+        category: 'Environment',
+        targetSignatures: 50,
+        signaturesCount: 0,
+        location: { city: 'Bengaluru', state: 'Karnataka' },
+        creator: citizenUser._id,
+        status: 'draft'
+      });
+    });
+
+    it('should allow an authenticated citizen to sign an active petition', async () => {
+      const res = await request(app)
+        .post(`/api/petitions/${activePetition._id}/sign`)
+        .set('Authorization', `Bearer ${otherCitizenToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Petition signed successfully');
+      expect(res.body.data.petitionId).toBe(activePetition._id.toString());
+      expect(res.body.data.signaturesCount).toBe(1);
+
+      // Verify in MongoDB
+      const signatureDoc = await Signature.findOne({
+        petition: activePetition._id,
+        user: otherCitizenUser._id
+      });
+      expect(signatureDoc).not.toBeNull();
+
+      // Verify petition document in MongoDB
+      const updatedPet = await Petition.findById(activePetition._id);
+      expect(updatedPet.signaturesCount).toBe(1);
+    });
+
+    it('should allow an authenticated official to sign an active petition', async () => {
+      const res = await request(app)
+        .post(`/api/petitions/${activePetition._id}/sign`)
+        .set('Authorization', `Bearer ${officialToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.signaturesCount).toBe(1);
+
+      const signatureDoc = await Signature.findOne({
+        petition: activePetition._id,
+        user: officialUser._id
+      });
+      expect(signatureDoc).not.toBeNull();
+    });
+
+    it('should reject signing from unauthenticated user (401)', async () => {
+      const res = await request(app).post(`/api/petitions/${activePetition._id}/sign`);
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should reject signing with non-existent petition ID (404)', async () => {
+      const nonExistentId = new mongoose.Types.ObjectId();
+      const res = await request(app)
+        .post(`/api/petitions/${nonExistentId}/sign`)
+        .set('Authorization', `Bearer ${citizenToken}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Petition not found');
+    });
+
+    it('should reject signing with invalid petition ID format (400)', async () => {
+      const res = await request(app)
+        .post('/api/petitions/invalid-id/sign')
+        .set('Authorization', `Bearer ${citizenToken}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should reject duplicate signing and not increment signaturesCount', async () => {
+      // First signing
+      const firstRes = await request(app)
+        .post(`/api/petitions/${activePetition._id}/sign`)
+        .set('Authorization', `Bearer ${otherCitizenToken}`);
+      expect(firstRes.status).toBe(200);
+      expect(firstRes.body.data.signaturesCount).toBe(1);
+
+      // Attempt duplicate signing
+      const dupRes = await request(app)
+        .post(`/api/petitions/${activePetition._id}/sign`)
+        .set('Authorization', `Bearer ${otherCitizenToken}`);
+
+      expect(dupRes.status).toBe(400);
+      expect(dupRes.body.success).toBe(false);
+      expect(dupRes.body.message).toContain('already signed');
+
+      // Verify signatures count did not increase
+      const updatedPet = await Petition.findById(activePetition._id);
+      expect(updatedPet.signaturesCount).toBe(1);
+
+      // Verify only 1 signature document exists
+      const count = await Signature.countDocuments({ petition: activePetition._id });
+      expect(count).toBe(1);
+    });
+
+    it('should reject signing a closed petition (400)', async () => {
+      const res = await request(app)
+        .post(`/api/petitions/${closedPetition._id}/sign`)
+        .set('Authorization', `Bearer ${citizenToken}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('Cannot sign a closed petition');
+
+      // Verify signatures count remains unchanged
+      const updatedClosed = await Petition.findById(closedPetition._id);
+      expect(updatedClosed.signaturesCount).toBe(5);
+    });
+
+    it('should reject signing a draft petition (400)', async () => {
+      const res = await request(app)
+        .post(`/api/petitions/${draftPetition._id}/sign`)
+        .set('Authorization', `Bearer ${citizenToken}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('not active');
     });
   });
 

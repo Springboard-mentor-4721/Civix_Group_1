@@ -1,4 +1,5 @@
 const Petition = require('../models/petition.model');
+const Signature = require('../models/signature.model');
 
 class PetitionService {
   /**
@@ -249,6 +250,69 @@ class PetitionService {
     return {
       deleted: true,
       id: petitionId
+    };
+  }
+
+  /**
+   * Sign a petition
+   */
+  async signPetition(petitionId, userId) {
+    const petition = await Petition.findById(petitionId);
+
+    if (!petition) {
+      const error = new Error('Petition not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (petition.status === 'closed') {
+      const error = new Error('Cannot sign a closed petition');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (petition.status !== 'active') {
+      const error = new Error('Cannot sign a petition that is not active');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Check if user has already signed
+    const existingSignature = await Signature.findOne({
+      petition: petitionId,
+      user: userId
+    });
+
+    if (existingSignature) {
+      const error = new Error('You have already signed this petition');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    try {
+      await Signature.create({
+        petition: petitionId,
+        user: userId
+      });
+    } catch (err) {
+      if (err.code === 11000) {
+        const error = new Error('You have already signed this petition');
+        error.statusCode = 400;
+        throw error;
+      }
+      throw err;
+    }
+
+    // Atomically increment signature count
+    const updatedPetition = await Petition.findByIdAndUpdate(
+      petitionId,
+      { $inc: { signaturesCount: 1 } },
+      { new: true }
+    );
+
+    return {
+      petitionId: updatedPetition._id,
+      signaturesCount: updatedPetition.signaturesCount
     };
   }
 }

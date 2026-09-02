@@ -159,6 +159,7 @@ All endpoints are prefixed with `/api`.
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/petitions` | Protected | Create a new civic petition |
+| `POST` | `/api/petitions/:id/sign` | Protected | Sign a petition (atomic increment, prevents duplicate signing) |
 | `GET` | `/api/petitions` | Public | List active petitions with search, filter, sorting, and pagination |
 | `GET` | `/api/petitions/my` | Protected | List petitions created by the authenticated user (including drafts) |
 | `GET` | `/api/petitions/:id` | Public | Get details of a single petition by ID (populated creator) |
@@ -313,6 +314,26 @@ All endpoints are prefixed with `/api`.
   "data": {
     "deleted": true,
     "id": "67be184b2e8a123456789abc"
+  }
+}
+```
+
+---
+
+#### 5. Sign a Petition (`POST /api/petitions/:id/sign`)
+**Headers:** `Authorization: Bearer <token>`
+- **Behavior:** Records a signature document, prevents duplicate signatures per user via unique compound indexing, and atomically increments `signaturesCount`.
+- **Closed / Inactive Petitions:** Rejects signing if the petition is closed or inactive (`400 Bad Request`).
+- **Duplicate Signing:** Rejects duplicate signing attempts by the same user with `400 Bad Request` (`You have already signed this petition`).
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Petition signed successfully",
+  "data": {
+    "petitionId": "67be184b2e8a123456789abc",
+    "signaturesCount": 1
   }
 }
 ```
