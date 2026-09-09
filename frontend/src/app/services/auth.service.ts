@@ -18,48 +18,37 @@ export class AuthService {
   constructor(private readonly http: HttpClient) {}
 
   register(payload: RegisterPayload): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${API_BASE_URL}/auth/register`, payload).pipe(
-      tap(({ data }) => this.establishSession(data)),
-    );
+    return this.http.post<AuthResponse>(`${API_BASE_URL}/auth/register`, payload).pipe(tap(({ data }) => this.establishSession(data)));
   }
 
   login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${API_BASE_URL}/auth/login`, { email, password }).pipe(
-      tap(({ data }) => this.establishSession(data)),
-    );
+    return this.http.post<AuthResponse>(`${API_BASE_URL}/auth/login`, { email, password }).pipe(tap(({ data }) => this.establishSession(data)));
   }
 
   getCurrentUser(): Observable<UserResponse> {
-    return this.http.get<UserResponse>(`${API_BASE_URL}/auth/me`).pipe(
-      tap(({ data }) => this.currentUserSignal.set(data.user)),
-    );
+    return this.http.get<UserResponse>(`${API_BASE_URL}/auth/me`).pipe(tap(({ data }) => this.currentUserSignal.set(data.user)));
+  }
+
+  getProfile(): Observable<UserResponse> { return this.getCurrentUser(); }
+
+  changePassword(payload: { currentPassword: string; newPassword: string }): Observable<any> {
+    return this.http.post(`${API_BASE_URL}/auth/change-password`, payload);
   }
 
   restoreSession(): Observable<User | null> {
     const token = this.getToken();
-    if (!token) {
-      this.restoringSignal.set(false);
-      return of(null);
-    }
-
+    if (!token) { this.restoringSignal.set(false); return of(null); }
     return this.getCurrentUser().pipe(
       map(({ data }) => data.user),
-      catchError(() => {
-        this.clearSession();
-        return of(null);
-      }),
+      catchError(() => { this.clearSession(); return of(null); }),
       tap(() => this.restoringSignal.set(false)),
-      finalize(() => this.restoringSignal.set(false)),
+      finalize(() => this.restoringSignal.set(false))
     );
   }
 
-  logout(): void {
-    this.clearSession();
-  }
+  logout(): void { this.clearSession(); }
 
-  getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
-  }
+  getToken(): string | null { return localStorage.getItem(TOKEN_KEY); }
 
   private establishSession(data: AuthData): void {
     localStorage.setItem(TOKEN_KEY, data.token);

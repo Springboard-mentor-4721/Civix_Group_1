@@ -15,10 +15,12 @@ export class LoginComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
   readonly auth = inject(AuthService);
+  
   readonly form = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
   });
+  
   loading = false;
   serverMessage = '';
   fieldErrors: Record<string, string> = {};
@@ -33,10 +35,16 @@ export class LoginComponent {
 
     this.loading = true;
     const { email, password } = this.form.getRawValue();
+    
+    // Passes email and password as separate parameters
     this.auth.login(email, password).subscribe({
-      next: () => this.router.navigate(['/profile']),
+      next: () => {
+        this.router.navigate(['/dashboard']);
+      },
       error: (error: ApiError) => this.showError(error),
-      complete: () => { this.loading = false; },
+      complete: () => { 
+        this.loading = false; 
+      },
     });
   }
 

@@ -1,0 +1,257 @@
+<div class="petitions-page">
+
+  <!-- Header -->
+  <section class="page-header">
+    <div>
+      <span class="eyebrow">CIVIC PARTICIPATION</span>
+      <h1>Petitions</h1>
+      <p>Discover, support, and create petitions that can make a difference in your community.</p>
+    </div>
+
+    <button class="create-btn" type="button" (click)="openCreateModal()">
+      + Create Petition
+    </button>
+  </section>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button
+      [class.active]="activeTab === 'all'"
+      (click)="setTab('all')">
+      All Petitions
+    </button>
+
+    <button
+      [class.active]="activeTab === 'my'"
+      (click)="setTab('my')">
+      My Petitions
+    </button>
+
+    <button
+      [class.active]="activeTab === 'signed'"
+      (click)="setTab('signed')">
+      Signed by Me
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <section class="filters">
+    <div class="search-box">
+      <span>⌕</span>
+      <input
+        type="text"
+        placeholder="Search petitions..."
+        [value]="searchText"
+        (input)="onSearch($event)">
+    </div>
+
+    <select (change)="onLocationChange($event)" [value]="selectedLocation">
+      @for (loc of locations; track loc) {
+        <option [value]="loc">{{ loc }}</option>
+      }
+    </select>
+
+    <select (change)="onCategoryChange($event)" [value]="selectedCategory">
+      @for (category of categories; track category) {
+        <option [value]="category">{{ category }}</option>
+      }
+    </select>
+
+    <select (change)="onStatusChange($event)" [value]="selectedStatus">
+      @for (status of statuses; track status.value) {
+        <option [value]="status.value">{{ status.label }}</option>
+      }
+    </select>
+  </section>
+
+  <!-- Petition Cards Grid -->
+  <section class="petition-grid">
+
+    @for (petition of filteredPetitions; track petition._id || petition.title) {
+      <article class="petition-card">
+        <div class="card-top">
+          <div class="petition-meta">
+            <span class="category">{{ petition.category }}</span>
+            <span>•</span>
+            <span>{{ getDisplayLocation(petition) }}</span>
+          </div>
+
+          <span
+            class="status"
+            [class.active-status]="petition.status === 'ACTIVE'"
+            [class.review-status]="petition.status === 'UNDER REVIEW'"
+            [class.closed-status]="petition.status === 'CLOSED'">
+            {{ petition.status }}
+          </span>
+        </div>
+
+        <h2>{{ petition.title }}</h2>
+        <p class="description">{{ petition.description }}</p>
+
+        <!-- Progress with Dynamic Percentage -->
+        <div class="progress-section">
+          <div class="progress-info">
+            <span>{{ petition.signatures || 0 }} / {{ petition.goal }} signatures</span>
+            <strong>{{ getProgress(petition) }}%</strong>
+          </div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [style.width.%]="getProgress(petition)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Row -->
+        <div class="card-action-row">
+          <button
+            class="sign-btn"
+            type="button"
+            [disabled]="petition.status === 'CLOSED' || petition.hasSigned || signingId === petition._id"
+            (click)="signPetition(petition)">
+            @if (signingId === petition._id) {
+              Signing...
+            } @else if (petition.hasSigned) {
+              ✓ Signed
+            } @else if (petition.status === 'CLOSED') {
+              Petition Closed
+            } @else {
+              Sign Petition
+            }
+          </button>
+
+          @if (isOwner(petition)) {
+            <button
+              class="delete-btn"
+              type="button"
+              [disabled]="deletingId === petition._id"
+              (click)="deletePetition(petition)">
+              {{ deletingId === petition._id ? '...' : 'Delete' }}
+            </button>
+          }
+        </div>
+
+        <div class="card-footer">
+          Created on {{ petition.createdDate }}
+        </div>
+      </article>
+    }
+
+    <!-- Empty State -->
+    @if (!loading && filteredPetitions.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h2>No Petitions Found</h2>
+        <p>No petitions match your current filters. Try changing your search or filters.</p>
+        <button class="clear-btn" type="button" (click)="clearFilters()">
+          Clear Filters
+        </button>
+      </div>
+    }
+
+  </section>
+
+  <!-- Pagination Controls -->
+  @if (totalPages > 1) {
+    <div class="pagination-bar">
+      <button
+        class="page-btn"
+        [disabled]="currentPage === 1 || loading"
+        (click)="fetchPetitions(currentPage - 1)">
+        ← Previous
+      </button>
+      <span class="page-indicator">Page {{ currentPage }} of {{ totalPages }}</span>
+      <button
+        class="page-btn"
+        [disabled]="currentPage === totalPages || loading"
+        (click)="fetchPetitions(currentPage + 1)">
+        Next →
+      </button>
+    </div>
+  }
+
+  <!-- Create Petition Modal -->
+  @if (showCreateModal) {
+    <div class="modal-overlay" (click)="closeCreateModal()">
+      <div class="modal-window" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Create a New Petition</h2>
+          <button class="modal-close-btn" type="button" (click)="closeCreateModal()">×</button>
+        </div>
+
+        @if (modalError) {
+          <div class="modal-error">{{ modalError }}</div>
+        }
+
+        <div class="modal-body">
+          <div class="form-item">
+            <label>Title * <small>(5 - 200 characters)</small></label>
+            <input 
+              type="text" 
+              [(ngModel)]="newPetition.title" 
+              placeholder="e.g. Repair Potholes on Main Sector Road">
+          </div>
+
+          <div class="form-row">
+            <div class="form-item">
+              <label>Category *</label>
+              <select [(ngModel)]="newPetition.category">
+                @for (cat of categories; track cat) {
+                  @if (cat !== 'All Categories') {
+                    <option [value]="cat">{{ cat }}</option>
+                  }
+                }
+              </select>
+            </div>
+
+            <div class="form-item">
+              <label>Target Signatures * <small>(1 - 1,000,000)</small></label>
+              <input 
+                type="number" 
+                [(ngModel)]="newPetition.targetSignatures" 
+                min="1" 
+                max="1000000" 
+                placeholder="100">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-item">
+              <label>City * <small>(Mandatory)</small></label>
+              <input 
+                type="text" 
+                [(ngModel)]="newPetition.city" 
+                placeholder="e.g. Noida">
+            </div>
+
+            <div class="form-item">
+              <label>State *</label>
+              <select [(ngModel)]="newPetition.state">
+                @for (st of statesList; track st) {
+                  <option [value]="st">{{ st }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-item">
+            <label>Description * <small>(20 - 5000 characters)</small></label>
+            <textarea
+              rows="4"
+              [(ngModel)]="newPetition.description"
+              placeholder="Provide clear details on why this petition is needed and what action authorities must take...">
+            </textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="modal-cancel-btn" type="button" (click)="closeCreateModal()" [disabled]="creating">Cancel</button>
+          <button class="modal-submit-btn" type="button" (click)="submitNewPetition()" [disabled]="creating">
+            {{ creating ? 'Submitting...' : 'Publish Petition' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

@@ -1,1 +1,65 @@
-<header class="site-header"><a class="brand" routerLink="/"><span class="brand-symbol">C</span><span>Civix</span></a><nav aria-label="Main navigation">@if (auth.currentUser(); as user) {<a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a><a routerLink="/profile" routerLinkActive="active">Profile</a><span class="role-nav">{{ user.role === 'official' ? 'Official space' : 'Citizen space' }}</span><button class="logout-button" type="button" (click)="logout()">Log out</button>} @else {<a routerLink="/login" routerLinkActive="active">Sign in</a><a class="nav-join" routerLink="/register">Join Civix</a>}</nav></header><main class="site-main"><router-outlet /></main><footer class="site-footer"><span>CIVIX / MILESTONE 01</span><span>Identity for a more connected public life.</span></footer>
+<header class="site-header">
+  <a class="brand" routerLink="/">
+    <span class="brand-symbol">C</span>
+    <span>Civix</span>
+  </a>
+
+  <nav aria-label="Main navigation">
+    @if (auth.currentUser(); as user) {
+
+      <a
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }">
+        Home
+      </a>
+
+      <a
+        routerLink="/dashboard"
+        routerLinkActive="active">
+        Dashboard
+      </a>
+
+      <a
+        routerLink="/profile"
+        routerLinkActive="active">
+        Profile
+      </a>
+
+      <span class="role-nav">
+        {{ user.role === 'official' ? 'Official space' : 'Citizen space' }}
+      </span>
+
+      <button
+        class="logout-button"
+        type="button"
+        (click)="logout()">
+        Log out
+      </button>
+
+    } @else {
+
+      <a
+        routerLink="/login"
+        routerLinkActive="active">
+        Sign in
+      </a>
+
+      <a
+        class="nav-join"
+        routerLink="/register">
+        Join Civix
+      </a>
+
+    }
+  </nav>
+</header>
+
+<main class="site-main">
+  <router-outlet />
+</main>
+
+<footer class="site-footer">
+  <span>CIVIX / MILESTONE 01</span>
+  <span>Identity for a more connected public life.</span>
+</footer>

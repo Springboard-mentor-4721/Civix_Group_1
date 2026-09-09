@@ -1,0 +1,333 @@
+<div class="reports-page">
+
+  <!-- HEADER -->
+  <section class="page-header">
+
+    <div>
+      <span class="eyebrow">CIVIC ACCOUNTABILITY</span>
+
+      <h1>Reports</h1>
+
+      <p>
+        Report local issues and track the progress of problems
+        affecting your community.
+      </p>
+    </div>
+
+    <button class="create-btn">
+      + Submit Report
+    </button>
+
+  </section>
+
+
+  <!-- FILTERS -->
+  <section class="filter-section">
+
+    <!-- SEARCH -->
+    <div class="search-box">
+
+      <span class="search-icon">🔍</span>
+
+      <input
+        type="text"
+        placeholder="Search reports..."
+        [(ngModel)]="searchText">
+
+    </div>
+
+
+    <!-- CATEGORY -->
+    <div class="filter-box">
+
+      <span>📂</span>
+
+      <select [(ngModel)]="selectedCategory">
+
+        @for (
+          category of categories;
+          track category
+        ) {
+
+          <option [value]="category">
+            {{ category }}
+          </option>
+
+        }
+
+      </select>
+
+    </div>
+
+
+    <!-- STATUS -->
+    <div class="filter-box">
+
+      <span>◉</span>
+
+      <select [(ngModel)]="selectedStatus">
+
+        @for (
+          status of statuses;
+          track status
+        ) {
+
+          <option [value]="status">
+            {{ status }}
+          </option>
+
+        }
+
+      </select>
+
+    </div>
+
+
+    <!-- LOCATION -->
+    <div class="filter-box">
+
+      <span>📍</span>
+
+      <select [(ngModel)]="selectedLocation">
+
+        @for (
+          location of locations;
+          track location
+        ) {
+
+          <option [value]="location">
+            {{ location }}
+          </option>
+
+        }
+
+      </select>
+
+    </div>
+
+
+    <button
+      class="clear-btn"
+      (click)="clearFilters()">
+
+      Clear Filters
+
+    </button>
+
+  </section>
+
+
+  <!-- RESULT SUMMARY -->
+  <div class="results-header">
+
+    <span>
+      Showing
+      <strong>{{ filteredReports.length }}</strong>
+      reports
+    </span>
+
+  </div>
+
+
+  <!-- REPORT CARDS -->
+  <section class="reports-grid">
+
+    @for (
+      report of filteredReports;
+      track report.title
+    ) {
+
+      <article class="report-card">
+
+        <!-- CARD HEADER -->
+        <div class="report-header">
+
+          <div class="report-title-area">
+
+            <span class="category-tag">
+              {{ report.category }}
+            </span>
+
+            <h2>
+              {{ report.title }}
+            </h2>
+
+          </div>
+
+
+          <span
+            class="status-badge"
+            [class.status-open]="report.status === 'OPEN'"
+            [class.status-progress]="report.status === 'IN PROGRESS'"
+            [class.status-resolved]="report.status === 'RESOLVED'">
+
+            {{ report.status }}
+
+          </span>
+
+        </div>
+
+
+        <!-- DESCRIPTION -->
+        <p class="description">
+          {{ report.description }}
+        </p>
+
+
+        <!-- PRIORITY -->
+        <div class="priority-row">
+
+          <span class="priority-label">
+            PRIORITY
+          </span>
+
+          <span
+            class="priority-badge"
+            [class.priority-low]="report.priority === 'LOW'"
+            [class.priority-medium]="report.priority === 'MEDIUM'"
+            [class.priority-high]="report.priority === 'HIGH'">
+
+            {{ report.priority }}
+
+          </span>
+
+        </div>
+
+
+        <!-- DETAILS -->
+        <div class="report-details">
+
+          <div class="detail-item">
+
+            <span class="detail-icon">
+              📍
+            </span>
+
+            <div>
+
+              <small>
+                LOCATION
+              </small>
+
+              <p>
+                {{ report.location }}
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="detail-item">
+
+            <span class="detail-icon">
+              👤
+            </span>
+
+            <div>
+
+              <small>
+                REPORTED BY
+              </small>
+
+              <p>
+                {{ report.reportedBy }}
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="detail-item">
+
+            <span class="detail-icon">
+              📅
+            </span>
+
+            <div>
+
+              <small>
+                REPORTED ON
+              </small>
+
+              <p>
+                {{ report.reportedOn }}
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ACTION -->
+        <div class="report-action">
+
+          <button class="view-btn">
+            View Report Details
+          </button>
+
+        </div>
+
+      </article>
+
+    }
+
+
+    <!-- EMPTY STATE -->
+    @if (filteredReports.length === 0) {
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          📋
+        </div>
+
+        <h2>
+          No Reports Found
+        </h2>
+
+        <p>
+          No reports match your current search or filters.
+        </p>
+
+        <button
+          class="clear-btn"
+          (click)="clearFilters()">
+
+          Clear Filters
+
+        </button>
+
+      </div>
+
+    }
+
+  </section>
+
+
+  <!-- INFORMATION CARD -->
+  <section class="info-card">
+
+    <div class="info-icon">
+      ℹ
+    </div>
+
+    <div>
+
+      <h3>
+        Help improve your community
+      </h3>
+
+      <p>
+        Reporting local issues helps public officials identify
+        problems and take appropriate action.
+      </p>
+
+    </div>
+
+  </section>
+
+</div>
