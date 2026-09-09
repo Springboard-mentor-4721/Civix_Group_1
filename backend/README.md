@@ -1,10 +1,11 @@
-# Civix Backend Service (Milestone 1 & Milestone 2)
+# Civix Backend Service (Milestones 1, 2 & 3)
 
-Civix is a Digital Civic Engagement & Petition Platform designed to empower citizens and government officials to engage transparently on civic issues, petitions, polling, and governance reporting.
+Civix is a Digital Civic Engagement & Petition Platform designed to empower citizens and government officials to engage transparently on civic issues, petitions, polling, sentiment tracking, and governance reporting.
 
 This service constitutes the **REST API Backend** for:
-- **Milestone 1:** User Roles & Verification (Authentication, JWT, Roles, Profile)
-- **Milestone 2:** Petition Creation & Management (Create, View, Search, Filter, Pagination, Edit/Delete before signatures)
+- **Milestone 1:** User Roles & Verification (Authentication, JWT, Roles, Profile, Change Password)
+- **Milestone 2:** Petition Creation & Management (Create, View, Sign, Search, Filter, Pagination, Edit/Delete before signatures)
+- **Milestone 3:** Issue-Specific Polls, Public Voting & Live Sentiment Tracking (Poll Creation, Public Voting, Sentiment Results Dashboard, Status Management)
 
 ---
 
@@ -30,26 +31,33 @@ backend/
 │   ├── config/
 │   │   └── db.js                 # MongoDB connection logic (Mongoose)
 │   ├── controllers/
-│   │   ├── auth.controller.js    # Auth HTTP controllers (register, login, me)
-│   │   └── petition.controller.js# Petition HTTP controllers (CRUD, search, filter)
+│   │   ├── auth.controller.js    # Auth HTTP controllers (register, login, me, change-password)
+│   │   ├── petition.controller.js# Petition HTTP controllers (CRUD, signing, search, filter)
+│   │   └── poll.controller.js    # Poll HTTP controllers (CRUD, voting, results, status)
 │   ├── middleware/
 │   │   ├── auth.middleware.js    # JWT authentication middleware
 │   │   ├── role.middleware.js    # Role-based access control (citizen / official)
 │   │   ├── validate.middleware.js# Express-validator error handling middleware
 │   │   └── error.middleware.js   # Centralized error handler & 404 handler
 │   ├── models/
-│   │   ├── user.model.js         # Mongoose User model
-│   │   └── petition.model.js     # Mongoose Petition model
+│   │   ├── user.model.js         # Mongoose User model (authentication & profile)
+│   │   ├── petition.model.js     # Mongoose Petition model
+│   │   ├── signature.model.js    # Mongoose Signature model (unique petition signing)
+│   │   ├── poll.model.js         # Mongoose Poll model (options, votesCount, totalVotes)
+│   │   └── vote.model.js         # Mongoose Vote model (unique poll voting constraint)
 │   ├── routes/
 │   │   ├── auth.routes.js        # Auth endpoint definitions (/api/auth)
 │   │   ├── petition.routes.js    # Petition endpoint definitions (/api/petitions)
+│   │   ├── poll.routes.js        # Poll endpoint definitions (/api/polls)
 │   │   └── index.js              # Central API router aggregator
 │   ├── services/
-│   │   ├── auth.service.js       # Authentication business logic & user operations
-│   │   └── petition.service.js   # Petition business logic, search, filter, restrictions
+│   │   ├── auth.service.js       # Authentication business logic & password handling
+│   │   ├── petition.service.js   # Petition business logic, signing, search, filter
+│   │   └── poll.service.js       # Poll business logic, atomic voting, sentiment calculations
 │   ├── validators/
 │   │   ├── auth.validator.js     # Payload validation rules for auth routes
-│   │   └── petition.validator.js # Payload and query validation rules for petitions
+│   │   ├── petition.validator.js # Payload and query validation rules for petitions
+│   │   └── poll.validator.js     # Payload and query validation rules for polls & voting
 │   ├── utils/
 │   │   ├── response.js           # Standardized API response formatters
 │   │   └── token.js              # JWT generation and verification utilities
@@ -57,7 +65,8 @@ backend/
 │   └── server.js                 # Server entry point: connects to DB and listens on PORT
 ├── tests/
 │   ├── auth.test.js              # Integration test suite for Milestone 1 auth endpoints
-│   └── petition.test.js          # Integration test suite for Milestone 2 petition endpoints
+│   ├── petition.test.js          # Integration test suite for Milestone 2 petition endpoints
+│   └── poll.test.js              # Integration test suite for Milestone 3 poll & voting endpoints
 ├── .env.example                  # Environment configuration template
 ├── .gitignore                    # Git ignore file for backend
 ├── package.json                  # Dependencies, metadata, and scripts
@@ -83,7 +92,7 @@ cp .env.example .env
 | `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/civix` |
 | `JWT_SECRET` | Secret key used for signing and verifying JWTs | *Random secure string* |
 | `JWT_EXPIRES_IN` | Token expiration duration | `7d` |
-| `CLIENT_ORIGIN` | Angular frontend client origin for CORS | `http://localhost:4200` |
+| `CLIENT_ORIGIN` | Frontend client origin for CORS | `http://localhost:4200` |
 
 ---
 
@@ -99,42 +108,35 @@ npm install
 npm run dev
 ```
 
-### 3. Run in Production Mode
-```bash
-npm start
-```
-
-### 4. Run Automated Test Suite
+### 3. Run Automated Tests
 ```bash
 npm test
 ```
 
 ---
 
-## 📡 API Specification
+## 📡 API Reference
 
-All endpoints are prefixed with `/api`.
+### Standard Response Format
 
-### Standard Response Formats
-
-**Success Response (2xx):**
+#### Success Response (`2xx`)
 ```json
 {
   "success": true,
-  "message": "Operation description",
-  "data": {}
+  "message": "Human-readable success message",
+  "data": { ... }
 }
 ```
 
-**Error Response (4xx / 5xx):**
+#### Error Response (`4xx` / `5xx`)
 ```json
 {
   "success": false,
-  "message": "Error description",
+  "message": "Human-readable error description",
   "errors": [
     {
-      "field": "title",
-      "message": "Title must be between 5 and 150 characters"
+      "field": "fieldName",
+      "message": "Specific validation failure message"
     }
   ]
 }
@@ -142,88 +144,123 @@ All endpoints are prefixed with `/api`.
 
 ---
 
-### Authentication Endpoints (Milestone 1)
+### 🔑 Milestone 1: Authentication & User Management Endpoints
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/health` | Public | Service health & status check |
-| `POST` | `/api/auth/register` | Public | Register `citizen` or `official` with location & verification state |
-| `POST` | `/api/auth/login` | Public | Authenticate user & return signed JWT with safe user profile |
-| `GET` | `/api/auth/me` | Protected | Retrieve authenticated user profile (Bearer token) |
-| `POST` | `/api/auth/change-password` | Protected | Change password for authenticated user |
+| `POST` | `/api/auth/register` | Public | Register a new Citizen or Official user |
+| `POST` | `/api/auth/login` | Public | Authenticate user and receive JWT Bearer token |
+| `GET` | `/api/auth/me` | Protected | Retrieve authenticated user's profile |
+| `POST` | `/api/auth/change-password` | Protected | Change account password with old password verification |
 
 ---
 
-### Petition Endpoints (Milestone 2)
+### 📋 Milestone 2: Petition Management & Signing Endpoints
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/petitions` | Protected | Create a new civic petition |
-| `POST` | `/api/petitions/:id/sign` | Protected | Sign a petition (atomic increment, prevents duplicate signing) |
-| `GET` | `/api/petitions` | Public | List active petitions with search, filter, sorting, and pagination |
-| `GET` | `/api/petitions/my` | Protected | List petitions created by the authenticated user (including drafts) |
-| `GET` | `/api/petitions/:id` | Public | Get details of a single petition by ID (populated creator) |
-| `PUT` | `/api/petitions/:id` | Protected (Creator) | Edit petition (Allowed ONLY if `signaturesCount === 0`) |
-| `DELETE` | `/api/petitions/:id` | Protected (Creator) | Delete petition (Allowed ONLY if `signaturesCount === 0`) |
+| `POST` | `/api/petitions` | Protected | Create a new petition with category, tags, target & location |
+| `GET` | `/api/petitions` | Public | List petitions with search, filters, pagination, and sorting |
+| `GET` | `/api/petitions/my` | Protected | List petitions created by the currently authenticated user |
+| `GET` | `/api/petitions/:id` | Public | Retrieve a single petition by its MongoDB ObjectId |
+| `POST` | `/api/petitions/:id/sign` | Protected | Sign an active petition (atomic signature recording & count increment) |
+| `PUT` | `/api/petitions/:id` | Protected | Update petition details (restricted to creator, only before signatures) |
+| `DELETE` | `/api/petitions/:id` | Protected | Delete petition (restricted to creator, only before signatures) |
 
 ---
 
-### Petition API Examples
+### 📊 Milestone 3: Polls, Public Voting & Live Sentiment Tracking Endpoints
 
-#### 1. Create a Petition (`POST /api/petitions`)
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/polls` | Protected | Create an issue-specific poll with >= 2 options & location |
+| `GET` | `/api/polls` | Public | List polls with search, category, location, status filters, and pagination |
+| `GET` | `/api/polls/my` | Protected | List polls created by the currently authenticated user |
+| `GET` | `/api/polls/:id` | Public | Retrieve detailed poll information and current option vote counts |
+| `POST` | `/api/polls/:id/vote` | Protected | Cast a vote on a poll option (atomic update, duplicate prevention) |
+| `GET` | `/api/polls/:id/results` | Public | Retrieve live poll results and percentage breakdown for sentiment dashboards |
+| `PATCH` | `/api/polls/:id/status` | Protected | Update poll status (`active` / `closed`) by creator or official |
+| `DELETE` | `/api/polls/:id` | Protected | Delete poll (restricted to creator/official, only before votes are cast) |
+
+---
+
+### 💡 Milestone 3 API Usage Examples
+
+#### 1. Create a Poll (`POST /api/polls`)
 **Headers:** `Authorization: Bearer <token>`
+
+**Request Body:**
 ```json
 {
-  "title": "Fix Main Street Potholes and Improve Road Safety",
-  "description": "The potholes on Main Street from 1st Cross to 5th Block have become dangerous for commuters and pedestrians.",
-  "category": "Infrastructure",
-  "tags": ["roads", "safety", "infrastructure"],
-  "targetSignatures": 250,
+  "title": "Should the city implement a 24/7 bus lane on Outer Ring Road?",
+  "description": "We are gathering citizen opinions on dedicated bus transit corridors to reduce traffic congestion.",
+  "category": "Transportation",
+  "options": [
+    "Yes, 24/7 dedicated lane",
+    "Yes, but peak hours only",
+    "No, it will increase car traffic"
+  ],
   "location": {
-    "address": "Main Street, Koramangala",
     "city": "Bengaluru",
     "state": "Karnataka",
-    "pincode": "560034",
-    "latitude": 12.9352,
-    "longitude": 77.6245
+    "address": "Outer Ring Road Corridor",
+    "pincode": "560103"
   },
-  "status": "active"
+  "endDate": "2026-10-31T23:59:59.000Z",
+  "relatedPetition": "67be184b2e8a123456789abc"
 }
 ```
 
-**Response (201 Created):**
+**Response (`201 Created`):**
 ```json
 {
   "success": true,
-  "message": "Petition created successfully",
+  "message": "Poll created successfully",
   "data": {
-    "petition": {
-      "_id": "67be184b2e8a123456789abc",
-      "title": "Fix Main Street Potholes and Improve Road Safety",
-      "description": "The potholes on Main Street from 1st Cross to 5th Block have become dangerous for commuters and pedestrians.",
-      "category": "Infrastructure",
-      "tags": ["roads", "safety", "infrastructure"],
-      "targetSignatures": 250,
-      "signaturesCount": 0,
+    "poll": {
+      "_id": "67be201f3e8a123456789def",
+      "title": "Should the city implement a 24/7 bus lane on Outer Ring Road?",
+      "description": "We are gathering citizen opinions on dedicated bus transit corridors...",
+      "category": "Transportation",
+      "options": [
+        {
+          "_id": "67be201f3e8a123456789de1",
+          "text": "Yes, 24/7 dedicated lane",
+          "votesCount": 0
+        },
+        {
+          "_id": "67be201f3e8a123456789de2",
+          "text": "Yes, but peak hours only",
+          "votesCount": 0
+        },
+        {
+          "_id": "67be201f3e8a123456789de3",
+          "text": "No, it will increase car traffic",
+          "votesCount": 0
+        }
+      ],
+      "totalVotes": 0,
+      "status": "active",
       "location": {
-        "address": "Main Street, Koramangala",
         "city": "Bengaluru",
         "state": "Karnataka",
-        "pincode": "560034",
-        "latitude": 12.9352,
-        "longitude": 77.6245
+        "address": "Outer Ring Road Corridor",
+        "pincode": "560103"
       },
-      "creator": {
+      "createdBy": {
         "_id": "67be0c5f2b84784a9e53b491",
-        "name": "John Citizen",
-        "email": "citizen@example.com",
-        "role": "citizen",
-        "location": { "city": "Bengaluru", "state": "Karnataka" }
+        "name": "Citizen One",
+        "email": "citizen1@civix.org",
+        "role": "citizen"
       },
-      "status": "active",
-      "mediaUrls": [],
-      "createdAt": "2026-08-28T18:00:00.000Z",
-      "updatedAt": "2026-08-28T18:00:00.000Z"
+      "relatedPetition": {
+        "_id": "67be184b2e8a123456789abc",
+        "title": "Construct Solar-Powered Bus Shelters in Koramangala",
+        "category": "Transportation",
+        "status": "active"
+      },
+      "createdAt": "2026-08-28T19:00:00.000Z",
+      "updatedAt": "2026-08-28T19:00:00.000Z"
     }
   }
 }
@@ -231,44 +268,42 @@ All endpoints are prefixed with `/api`.
 
 ---
 
-#### 2. Query Petitions with Search & Filters (`GET /api/petitions`)
+#### 2. Query Polls (`GET /api/polls`)
 **Query Parameters:**
-- `search=potholes` (searches title, description, and tags)
-- `category=Infrastructure`
+- `search=corridor` (searches title and description)
+- `category=Transportation`
 - `city=Bengaluru`
 - `state=Karnataka`
-- `tag=safety`
+- `status=active` (or `closed`)
+- `relatedPetition=67be184b2e8a123456789abc`
+- `sortBy=totalVotes`
+- `order=desc`
 - `page=1`
 - `limit=10`
-- `sortBy=createdAt`
-- `order=desc`
 
-**Response (200 OK):**
+**Response (`200 OK`):**
 ```json
 {
   "success": true,
-  "message": "Petitions retrieved successfully",
+  "message": "Polls retrieved successfully",
   "data": {
-    "petitions": [
+    "polls": [
       {
-        "_id": "67be184b2e8a123456789abc",
-        "title": "Fix Main Street Potholes and Improve Road Safety",
-        "description": "The potholes on Main Street from 1st Cross to 5th Block have become dangerous...",
-        "category": "Infrastructure",
-        "tags": ["roads", "safety", "infrastructure"],
-        "targetSignatures": 250,
-        "signaturesCount": 0,
+        "_id": "67be201f3e8a123456789def",
+        "title": "Should the city implement a 24/7 bus lane on Outer Ring Road?",
+        "category": "Transportation",
+        "totalVotes": 42,
+        "status": "active",
         "location": {
           "city": "Bengaluru",
           "state": "Karnataka"
         },
-        "creator": {
+        "createdBy": {
           "_id": "67be0c5f2b84784a9e53b491",
-          "name": "John Citizen",
+          "name": "Citizen One",
           "role": "citizen"
         },
-        "status": "active",
-        "createdAt": "2026-08-28T18:00:00.000Z"
+        "createdAt": "2026-08-28T19:00:00.000Z"
       }
     ],
     "pagination": {
@@ -285,64 +320,157 @@ All endpoints are prefixed with `/api`.
 
 ---
 
-#### 3. Edit Petition (`PUT /api/petitions/:id`)
+#### 3. Cast a Vote (`POST /api/polls/:id/vote`)
 **Headers:** `Authorization: Bearer <token>`
-- **Rule:** Restricted to the creator, and only if `signaturesCount === 0`.
 
-**Response (200 OK):**
+**Request Body:**
+```json
+{
+  "optionId": "67be201f3e8a123456789de1"
+}
+```
+
+**Response (`200 OK`):**
 ```json
 {
   "success": true,
-  "message": "Petition updated successfully",
+  "message": "Vote recorded successfully",
   "data": {
-    "petition": { ... }
+    "vote": {
+      "pollId": "67be201f3e8a123456789def",
+      "optionId": "67be201f3e8a123456789de1",
+      "votedAt": "2026-08-28T19:05:00.000Z"
+    },
+    "poll": {
+      "_id": "67be201f3e8a123456789def",
+      "totalVotes": 1,
+      "options": [
+        {
+          "_id": "67be201f3e8a123456789de1",
+          "text": "Yes, 24/7 dedicated lane",
+          "votesCount": 1
+        }
+      ]
+    },
+    "results": {
+      "pollId": "67be201f3e8a123456789def",
+      "title": "Should the city implement a 24/7 bus lane on Outer Ring Road?",
+      "totalVotes": 1,
+      "options": [
+        {
+          "_id": "67be201f3e8a123456789de1",
+          "text": "Yes, 24/7 dedicated lane",
+          "votesCount": 1,
+          "percentage": 100.0
+        },
+        {
+          "_id": "67be201f3e8a123456789de2",
+          "text": "Yes, but peak hours only",
+          "votesCount": 0,
+          "percentage": 0.0
+        },
+        {
+          "_id": "67be201f3e8a123456789de3",
+          "text": "No, it will increase car traffic",
+          "votesCount": 0,
+          "percentage": 0.0
+        }
+      ]
+    }
   }
 }
 ```
 
 ---
 
-#### 4. Delete Petition (`DELETE /api/petitions/:id`)
-**Headers:** `Authorization: Bearer <token>`
-- **Rule:** Restricted to the creator, and only if `signaturesCount === 0`.
+#### 4. Live Sentiment / Poll Results Dashboard (`GET /api/polls/:id/results`)
+**Access:** Public
 
-**Response (200 OK):**
+**Response (`200 OK`):**
 ```json
 {
   "success": true,
-  "message": "Petition deleted successfully",
+  "message": "Poll results retrieved successfully",
   "data": {
-    "deleted": true,
-    "id": "67be184b2e8a123456789abc"
+    "results": {
+      "pollId": "67be201f3e8a123456789def",
+      "title": "Should the city implement a 24/7 bus lane on Outer Ring Road?",
+      "description": "We are gathering citizen opinions on dedicated bus transit corridors...",
+      "category": "Transportation",
+      "status": "active",
+      "totalVotes": 150,
+      "options": [
+        {
+          "_id": "67be201f3e8a123456789de1",
+          "text": "Yes, 24/7 dedicated lane",
+          "votesCount": 90,
+          "percentage": 60.0
+        },
+        {
+          "_id": "67be201f3e8a123456789de2",
+          "text": "Yes, but peak hours only",
+          "votesCount": 45,
+          "percentage": 30.0
+        },
+        {
+          "_id": "67be201f3e8a123456789de3",
+          "text": "No, it will increase car traffic",
+          "votesCount": 15,
+          "percentage": 10.0
+        }
+      ],
+      "startDate": "2026-08-28T19:00:00.000Z",
+      "endDate": "2026-10-31T23:59:59.000Z",
+      "location": {
+        "city": "Bengaluru",
+        "state": "Karnataka",
+        "address": "Outer Ring Road Corridor"
+      }
+    }
   }
 }
 ```
 
 ---
 
-#### 5. Sign a Petition (`POST /api/petitions/:id/sign`)
+#### 5. Close / Update Poll Status (`PATCH /api/polls/:id/status`)
 **Headers:** `Authorization: Bearer <token>`
-- **Behavior:** Records a signature document, prevents duplicate signatures per user via unique compound indexing, and atomically increments `signaturesCount`.
-- **Closed / Inactive Petitions:** Rejects signing if the petition is closed or inactive (`400 Bad Request`).
-- **Duplicate Signing:** Rejects duplicate signing attempts by the same user with `400 Bad Request` (`You have already signed this petition`).
+- **Access:** Restricted to the poll creator or users with the `official` role.
 
-**Response (200 OK):**
+**Request Body:**
+```json
+{
+  "status": "closed"
+}
+```
+
+**Response (`200 OK`):**
 ```json
 {
   "success": true,
-  "message": "Petition signed successfully",
+  "message": "Poll status updated successfully",
   "data": {
-    "petitionId": "67be184b2e8a123456789abc",
-    "signaturesCount": 1
+    "poll": {
+      "_id": "67be201f3e8a123456789def",
+      "status": "closed"
+    }
   }
 }
 ```
 
 ---
 
-## 🔒 Security & Business Rules
+## 🔒 Security & Voting Rules
 
-1. **Ownership Authorization:** Only the user who created a petition can update or delete it. Non-creators receive `403 Forbidden`.
-2. **Signature Integrity Constraint:** Once a petition receives signatures (`signaturesCount > 0`), it is locked from modification and deletion to protect the integrity of citizen endorsements (`400 Bad Request`).
-3. **Data Sanitization & Indexing:** Full-text and compound indexes ensure performant search across large datasets while preventing injection via structured regex sanitation.
-4. **Zero Sensitive Data Exposure:** Password fields are stripped during query population and serialization.
+1. **Duplicate Vote Prevention:**
+   - Enforced at the application level and the database layer via a unique compound index on the `Vote` model: `{ poll: 1, user: 1 }, { unique: true }`.
+   - Repeated voting attempts by the same user return `400 Bad Request` (`You have already voted on this poll`).
+2. **Atomic Vote Counting:**
+   - Option vote counts and total poll votes are updated atomically using MongoDB `$inc` operators (`'options.$.votesCount': 1, totalVotes: 1`) to eliminate concurrency race conditions.
+3. **Closed Poll Protection:**
+   - Once a poll status becomes `closed` (or its `endDate` passes), new votes are rejected (`400 Bad Request`), while poll results remain public and viewable for sentiment analysis.
+4. **Poll Modification & Deletion Rules:**
+   - Only the poll creator or official can close a poll.
+   - Deletion is only permitted before any votes have been cast (`totalVotes === 0`).
+5. **Data Privacy:**
+   - Voter identities are securely stored in the `Vote` collection for auditability and duplicate prevention, but individual vote-user mappings are never exposed in public results endpoints.
