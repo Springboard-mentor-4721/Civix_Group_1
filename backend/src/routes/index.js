@@ -1,5 +1,6 @@
 const express = require('express');
 const authRoutes = require('./auth.routes');
+const dashboardRoutes = require('./dashboard.routes');
 const { sendSuccess } = require('../utils/response');
 
 const router = express.Router();
@@ -18,5 +19,8 @@ router.use('/auth', authRoutes);
 // Petition routes
 const petitionRoutes = require('./petition.routes');
 router.use('/petitions', petitionRoutes);
+
+// Dashboard routes
+router.use('/dashboard', dashboardRoutes);
 
 module.exports = router;

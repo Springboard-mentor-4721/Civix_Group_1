@@ -15,14 +15,50 @@ export class RegisterComponent {
   loading = false; detectingLocation = false; serverMessage = ''; fieldErrors: Record<string, string> = {};
 
   autoDetectLocation(): void {
+    if (!('geolocation' in navigator)) {
+      this.serverMessage = 'Unable to detect your location. Please enter it manually.';
+      return;
+    }
+
     this.detectingLocation = true;
-    this.http.get<any>('http://ip-api.com/json').subscribe({
-      next: (res) => {
-        if (res?.status === 'success') this.form.patchValue({ city: res.city || '', state: res.regionName || '', pincode: res.zip || '', latitude: res.lat ? String(res.lat) : '', longitude: res.lon ? String(res.lon) : '' });
-        this.detectingLocation = false;
+    this.serverMessage = '';
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const data = await response.json();
+          const address = data?.address ?? {};
+          const city = address.city || address.town || address.village || address.county || '';
+          const state = address.state || address.state_district || '';
+          const pincode = address.postcode || '';
+
+          this.form.patchValue({
+            city,
+            state,
+            pincode,
+            address: data?.display_name || '',
+            latitude: String(latitude),
+            longitude: String(longitude)
+          });
+        } catch {
+          this.serverMessage = 'Unable to detect your location. Please enter it manually.';
+        } finally {
+          this.detectingLocation = false;
+        }
       },
-      error: () => { this.detectingLocation = false; }
-    });
+      () => {
+        this.detectingLocation = false;
+        this.serverMessage = 'Unable to detect your location. Please enter it manually.';
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   }
 
   submit(): void {

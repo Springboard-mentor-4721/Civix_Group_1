@@ -171,6 +171,45 @@ class PetitionService {
   }
 
   /**
+   * Update petition status for official review workflow
+   */
+  async updateStatus(petitionId, newStatus) {
+    const petition = await Petition.findById(petitionId);
+
+    if (!petition) {
+      const error = new Error('Petition not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const supportedStatuses = ['active', 'under_review', 'closed'];
+    if (!supportedStatuses.includes(newStatus)) {
+      const error = new Error(`Invalid petition status. Supported values: ${supportedStatuses.join(', ')}`);
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const allowedTransitions = {
+      active: ['under_review'],
+      under_review: ['active', 'closed'],
+      closed: []
+    };
+
+    if (!allowedTransitions[petition.status] || !allowedTransitions[petition.status].includes(newStatus)) {
+      const error = new Error(
+        `Invalid petition status transition from "${petition.status}" to "${newStatus}".`
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+
+    petition.status = newStatus;
+    await petition.save();
+
+    return await petition.populate('creator', 'name email role location');
+  }
+
+  /**
    * Update a petition (restricted to creator and only before signatures)
    */
   async update(petitionId, userId, updateData) {

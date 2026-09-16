@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { User } from '../../models/api.models';
+import { DashboardService } from '../../services/dashboard.service';
+import { DashboardStats, User } from '../../models/api.models';
 
 @Component({
   selector: 'app-dashboard',
@@ -13,6 +14,16 @@ import { User } from '../../models/api.models';
 })
 export class DashboardComponent implements OnInit {
   user: User | null = null;
+  stats: DashboardStats = {
+    myPetitions: 0,
+    successfulPetitions: 0,
+    pollsParticipated: 0,
+    activePetitionsNearYou: 0,
+    petitionsPendingReview: 0,
+    resolvedGrievances: 0,
+    activeMunicipalPolls: 0,
+    incomingPetitionsForDepartmentReview: 0
+  };
   loading: boolean = true;
   selectedCategory: string = 'All Categories';
 
@@ -29,11 +40,33 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     public authService: AuthService,
+    private readonly dashboardService: DashboardService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.fetchProfile();
+    const currentUser = this.authService.currentUser();
+    if (currentUser) {
+      this.fetchProfile();
+      this.fetchStats();
+      return;
+    }
+
+    const token = this.authService.getToken();
+    if (!token) {
+      this.loading = false;
+      return;
+    }
+
+    this.authService.restoreSession().subscribe({
+      next: () => {
+        this.fetchProfile();
+        this.fetchStats();
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
   }
 
   fetchProfile(): void {
@@ -46,6 +79,20 @@ export class DashboardComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
+      }
+    });
+  }
+
+  fetchStats(): void {
+    this.dashboardService.getStats().subscribe({
+      next: (res) => {
+        const incomingStats = res?.data?.stats;
+        if (incomingStats && typeof incomingStats === 'object') {
+          this.stats = { ...this.stats, ...incomingStats };
+        }
+      },
+      error: () => {
+        // keep the current stats instead of overwriting with zero on an expired/empty response
       }
     });
   }

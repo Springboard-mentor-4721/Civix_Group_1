@@ -1,17 +1,95 @@
-<section class="auth-layout">
-  <div class="auth-intro"><p class="eyebrow">Welcome back</p><h1>Your civic account, ready when you are.</h1><p>Sign in to see your Civix identity and continue where you left off.</p></div>
-  <form class="form-panel" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-    <div class="form-heading"><span>Account access</span><h2>Sign in</h2></div>
-    @if (serverMessage) { <div class="error-summary" role="alert">{{ serverMessage }}</div> }
-    <label>Email <input type="email" formControlName="email" autocomplete="email" placeholder="you@example.com" />
-      @if (form.controls.email.touched && form.controls.email.invalid) { <small>Enter a valid email address.</small> }
-      @if (fieldErrors['email']) { <small>{{ fieldErrors['email'] }}</small> }
-    </label>
-    <label>Password <input type="password" formControlName="password" autocomplete="current-password" placeholder="Your password" />
-      @if (form.controls.password.touched && form.controls.password.hasError('required')) { <small>Password is required.</small> }
-      @if (fieldErrors['password']) { <small>{{ fieldErrors['password'] }}</small> }
-    </label>
-    <button class="submit-button" type="submit" [disabled]="loading">{{ loading ? 'Signing in...' : 'Sign in' }}</button>
-    <p class="switch-link">New to Civix? <a routerLink="/register">Create an account</a></p>
-  </form>
+<section class="auth-layout login-layout">
+  <div class="auth-intro">
+    <p class="eyebrow">YOUR VOICE. YOUR CITY.</p>
+    <h1>Civix: Digital<br>Civic Engagement &amp;<br>Petition Platform</h1>
+    <p class="intro-text">Sign in to follow the issues that matter, join public conversations, and help your community move forward.</p>
+
+    <div class="info-stack" aria-label="Civix platform benefits">
+      <div class="info-block">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5h7l4 4V18a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2Zm6 0v4h4"/><path d="M8 12h8M8 15h8M10 8h1"/></svg>
+        </div>
+        <div class="info-copy">
+          <h3>Create and Sign Petitions</h3>
+          <p>Raise issues that matter and collect support from your community.</p>
+        </div>
+      </div>
+
+      <div class="info-block">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18V8m5 10V5m5 13v-7m5 7v-4"/><path d="M3 18h18"/></svg>
+        </div>
+        <div class="info-copy">
+          <h3>Participate in Public Polls</h3>
+          <p>Share your opinion and see what your community thinks.</p>
+        </div>
+      </div>
+
+      <div class="info-block">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9.5a5 5 0 1 1 10 0v5.5a2 2 0 0 1-2 2h-1l-2 2-2-2H9a2 2 0 0 1-2-2V9.5Z"/><path d="M9.5 13h5"/></svg>
+        </div>
+        <div class="info-copy">
+          <h3>Track Official Responses</h3>
+          <p>Stay informed about how officials respond to community concerns.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-quote">
+      <span class="quote-mark" aria-hidden="true"></span>
+      <span>Civix: Empowering communities.<br>Strengthening democracy.</span>
+    </div>
+  </div>
+
+  <div class="form-shell">
+    <form class="form-panel" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="form-heading">
+        <span>WELCOME BACK</span>
+        <h2>Sign in to<br>Civix</h2>
+        <p>Continue your civic journey.</p>
+      </div>
+
+      @if (serverMessage) {
+        <div class="error-summary" role="alert">{{ serverMessage }}</div>
+      }
+
+      <label class="field-label">
+        <span>Email address</span>
+        <span class="input-wrap">
+          <input type="email" formControlName="email" autocomplete="email" placeholder="you@example.com" />
+          <svg class="field-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Zm2 0 6 4.5 6-4.5"/></svg>
+        </span>
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <small>Enter a valid email address.</small>
+        }
+        @if (fieldErrors['email']) {
+          <small>{{ fieldErrors['email'] }}</small>
+        }
+      </label>
+
+      <label class="field-label">
+        <span>Password</span>
+        <span class="input-wrap">
+          <input type="password" formControlName="password" autocomplete="current-password" placeholder="••••••••" />
+          <svg class="field-icon eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.7"/></svg>
+        </span>
+        @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+          <small>Password is required.</small>
+        }
+        @if (fieldErrors['password']) {
+          <small>{{ fieldErrors['password'] }}</small>
+        }
+      </label>
+
+     
+
+      <button class="submit-button" type="submit" [disabled]="loading">
+        <span>{{ loading ? 'Signing in...' : 'Sign in' }}</span>
+        <span class="button-arrow" aria-hidden="true">→</span>
+      </button>
+
+      <p class="switch-link">New to Civix? <a routerLink="/register">Create an account</a></p>
+    </form>
+  </div>
 </section>

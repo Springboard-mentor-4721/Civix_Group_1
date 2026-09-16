@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { finalize } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 
 export interface Petition {
   _id?: string;
@@ -35,6 +36,7 @@ export interface Petition {
 export class Petitions implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly authService = inject(AuthService);
   private readonly apiUrl = 'http://localhost:5000/api/petitions';
 
   activeTab: 'all' | 'my' | 'signed' = 'all';
@@ -51,6 +53,11 @@ export class Petitions implements OnInit {
   currentPage = 1;
   totalPages = 1;
   totalPetitions = 0;
+  currentUserRole: string | null = null;
+  statusUpdateId: string | null = null;
+  statusMessage: string | null = null;
+  statusError: string | null = null;
+  statusDrafts: Record<string, string> = {};
 
   showCreateModal = false;
   creating = false;
@@ -94,7 +101,7 @@ export class Petitions implements OnInit {
   statuses = [
     { label: 'All Statuses', value: 'All' },
     { label: 'ACTIVE', value: 'active' },
-    { label: 'UNDER REVIEW', value: 'under review' },
+    { label: 'UNDER REVIEW', value: 'under_review' },
     { label: 'CLOSED', value: 'closed' }
   ];
 
@@ -115,20 +122,99 @@ export class Petitions implements OnInit {
   }
 
   private getAuthHeaders(): { [header: string]: string } {
-    const token = localStorage.getItem('token') || '';
+    const token = this.authService.getToken() || '';
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   private extractCurrentUser(): void {
+    const currentUser = this.authService.currentUser();
+    if (currentUser) {
+      this.currentUserId = currentUser._id || null;
+      this.currentUserRole = currentUser.role || null;
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('token');
+      const token = this.authService.getToken();
       if (token) {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        this.currentUserId = payload.id || payload._id || null;
+        const role = payload.role || payload.user?.role || null;
+        this.currentUserId = payload._id || payload.id || payload.user?._id || payload.user?.id || null;
+        this.currentUserRole = role;
       }
     } catch {
       this.currentUserId = null;
+      this.currentUserRole = null;
     }
+  }
+
+  get isOfficialUser(): boolean {
+    return this.currentUserRole === 'official';
+  }
+
+  getStatusValue(status: string | undefined): string {
+    return (status || 'active').toLowerCase().replace(/\s+/g, '_');
+  }
+
+  getStatusLabel(status: string | undefined): string {
+    const normalized = this.getStatusValue(status);
+    if (normalized === 'under_review') return 'UNDER REVIEW';
+    if (normalized === 'active') return 'ACTIVE';
+    if (normalized === 'closed') return 'CLOSED';
+    return (status || 'ACTIVE').toUpperCase();
+  }
+
+  initializeStatusDrafts(): void {
+    this.petitions.forEach((petition) => {
+      if (petition._id) {
+        this.statusDrafts[petition._id] = this.getStatusValue(petition.status);
+      }
+    });
+  }
+
+  onOfficialStatusChange(petitionId: string, value: string): void {
+    if (!petitionId) return;
+    this.statusDrafts[petitionId] = value;
+  }
+
+  updatePetitionStatus(petition: Petition): void {
+    if (!petition._id || !this.isOfficialUser) return;
+
+    const nextStatus = this.statusDrafts[petition._id] || this.getStatusValue(petition.status);
+
+    if (nextStatus === this.getStatusValue(petition.status)) {
+      this.statusError = 'Choose a different status before updating.';
+      this.statusMessage = null;
+      return;
+    }
+
+    this.statusUpdateId = petition._id;
+    this.statusError = null;
+    this.statusMessage = null;
+
+    this.http.patch<any>(
+      `${this.apiUrl}/${petition._id}/status`,
+      { status: nextStatus },
+      { headers: this.getAuthHeaders() }
+    )
+      .pipe(
+        finalize(() => {
+          this.statusUpdateId = null;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          const updatedStatus = res?.data?.petition?.status || nextStatus;
+          this.statusMessage = `Petition status updated to ${this.getStatusLabel(updatedStatus)}.`;
+          this.statusDrafts[petition._id!] = this.getStatusValue(updatedStatus);
+          this.fetchPetitions(this.currentPage);
+        },
+        error: (err) => {
+          this.statusError = err?.error?.message || 'Unable to update petition status.';
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   fetchPetitions(page: number = 1): void {
@@ -153,8 +239,12 @@ export class Petitions implements OnInit {
     }
 
     const endpoint = this.activeTab === 'my'
-      ? `${this.apiUrl}/my-petitions`
+      ? `${this.apiUrl}/my`
       : this.apiUrl;
+
+    if (this.activeTab === 'my' && this.selectedStatus === 'All') {
+      params = params.delete('status');
+    }
 
     this.http.get<any>(endpoint, { params, headers: this.getAuthHeaders() })
       .pipe(
@@ -187,7 +277,7 @@ export class Petitions implements OnInit {
               signatures: currentSignatures,
               goal: targetGoal,
               hasSigned: Boolean(item.hasSigned),
-              status: (item.status || 'ACTIVE').toUpperCase(),
+              status: this.getStatusLabel(item.status),
               createdDate: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', {
                 day: 'numeric',
                 month: 'short',
@@ -198,6 +288,7 @@ export class Petitions implements OnInit {
 
           this.totalPages = payload?.pagination?.pages || payload?.totalPages || 1;
           this.totalPetitions = payload?.pagination?.total || payload?.total || this.petitions.length;
+          this.initializeStatusDrafts();
           this.cdr.detectChanges();
         },
         error: (err) => {

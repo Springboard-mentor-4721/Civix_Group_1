@@ -178,6 +178,20 @@ const updatePetitionValidator = [
     .withMessage(`Status must be one of: ${validStatuses.join(', ')}`)
 ];
 
+const officialStatusValues = ['active', 'under_review', 'closed'];
+
+const updatePetitionStatusValidator = [
+  param('id')
+    .isMongoId()
+    .withMessage('Invalid petition ID format'),
+
+  body('status')
+    .exists()
+    .withMessage('Status is required')
+    .isIn(officialStatusValues)
+    .withMessage(`Status must be one of: ${officialStatusValues.join(', ')}`)
+];
+
 const petitionQueryValidator = [
   query('page')
     .optional()
@@ -219,8 +233,10 @@ const petitionIdValidator = [
 module.exports = {
   createPetitionValidator,
   updatePetitionValidator,
+  updatePetitionStatusValidator,
   petitionQueryValidator,
   petitionIdValidator,
   validCategories,
-  validStatuses
+  validStatuses,
+  officialStatusValues
 };

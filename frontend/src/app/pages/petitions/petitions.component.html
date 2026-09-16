@@ -34,6 +34,12 @@
     </button>
   </div>
 
+  @if (statusMessage || statusError) {
+    <div class="status-banner" [class.success]="statusMessage" [class.error]="statusError">
+      {{ statusMessage || statusError }}
+    </div>
+  }
+
   <!-- Filters -->
   <section class="filters">
     <div class="search-box">
@@ -130,6 +136,30 @@
             </button>
           }
         </div>
+
+        @if (isOfficialUser) {
+          <div class="official-status-panel">
+            <label class="status-update-label" for="status-{{ petition._id }}">Change status</label>
+            <div class="status-update-row">
+              <select
+                id="status-{{ petition._id }}"
+                [value]="statusDrafts[petition._id!] || getStatusValue(petition.status)"
+                (change)="onOfficialStatusChange(petition._id || '', $any($event.target).value)">
+                <option value="active">ACTIVE</option>
+                <option value="under_review">UNDER REVIEW</option>
+                <option value="closed">CLOSED</option>
+              </select>
+
+              <button
+                type="button"
+                class="status-update-btn"
+                [disabled]="statusUpdateId === petition._id"
+                (click)="updatePetitionStatus(petition)">
+                {{ statusUpdateId === petition._id ? 'Updating...' : 'Update' }}
+              </button>
+            </div>
+          </div>
+        }
 
         <div class="card-footer">
           Created on {{ petition.createdDate }}
