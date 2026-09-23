@@ -1,0 +1,295 @@
+<div class="poll-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1>Public Polls</h1>
+      <p>Share your opinion and participate in civic decisions.</p>
+    </div>
+
+    <button class="add-btn" (click)="toggleAddPoll()">
+      {{ showAddPoll ? 'Close' : '+ Add Poll' }}
+    </button>
+  </div>
+
+  <!-- Messages -->
+  <div class="message success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <div class="message error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Add Poll Form -->
+  <div class="add-poll-card" *ngIf="showAddPoll">
+
+    <h2>Create a New Poll</h2>
+
+    <div class="form-group">
+      <label>Poll Title *</label>
+      <input
+        type="text"
+        [(ngModel)]="newPoll.title"
+        placeholder="Enter poll title"
+        maxlength="200">
+    </div>
+
+    <div class="form-group">
+      <label>Description</label>
+      <textarea
+        [(ngModel)]="newPoll.description"
+        placeholder="Describe the issue or question..."
+        rows="4"
+        maxlength="2000">
+      </textarea>
+    </div>
+
+    <div class="form-row">
+
+      <div class="form-group">
+        <label>Category *</label>
+
+        <select [(ngModel)]="newPoll.category">
+          <option value="">Select category</option>
+
+          <option
+            *ngFor="let category of categories"
+            [value]="category">
+            {{ category }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>End Date</label>
+
+        <input
+          type="date"
+          [(ngModel)]="newPoll.endDate">
+      </div>
+
+    </div>
+
+    <!-- Options -->
+    <div class="options-section">
+
+      <div class="section-title">
+        <label>Poll Options *</label>
+
+        <button
+          type="button"
+          class="small-btn"
+          (click)="addOption()">
+          + Add Option
+        </button>
+      </div>
+
+      <div
+        class="option-row"
+        *ngFor="let option of newPoll.options; let i = index">
+
+        <input
+          type="text"
+          [(ngModel)]="newPoll.options[i]"
+          placeholder="Option {{ i + 1 }}">
+
+        <button
+          *ngIf="newPoll.options.length > 2"
+          type="button"
+          class="remove-btn"
+          (click)="removeOption(i)">
+          ×
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- Location -->
+    <h3>Location</h3>
+
+    <div class="form-row">
+
+      <div class="form-group">
+        <label>City *</label>
+
+        <input
+          type="text"
+          [(ngModel)]="newPoll.location.city"
+          placeholder="Nagpur">
+      </div>
+
+      <div class="form-group">
+        <label>State *</label>
+
+        <input
+          type="text"
+          [(ngModel)]="newPoll.location.state"
+          placeholder="Maharashtra">
+      </div>
+
+    </div>
+
+    <div class="form-row">
+
+      <div class="form-group">
+        <label>Address</label>
+
+        <input
+          type="text"
+          [(ngModel)]="newPoll.location.address"
+          placeholder="Optional address">
+      </div>
+
+      <div class="form-group">
+        <label>Pincode</label>
+
+        <input
+          type="text"
+          [(ngModel)]="newPoll.location.pincode"
+          placeholder="440001">
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+
+      <button
+        type="button"
+        class="cancel-btn"
+        (click)="toggleAddPoll()">
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        class="submit-btn"
+        [disabled]="submitting"
+        (click)="createPoll()">
+
+        {{ submitting ? 'Creating...' : 'Create Poll' }}
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- Search and Filter -->
+  <div class="filter-card">
+
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="search"
+        placeholder="Search polls..."
+        (keyup.enter)="loadPolls()">
+
+      <button (click)="loadPolls()">Search</button>
+    </div>
+
+    <select
+      [(ngModel)]="selectedCategory"
+      (change)="loadPolls()">
+
+      <option value="">All Categories</option>
+
+      <option
+        *ngFor="let category of categories"
+        [value]="category">
+        {{ category }}
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    Loading polls...
+  </div>
+
+
+  <!-- Poll List -->
+  <div class="poll-list" *ngIf="!loading">
+
+    <div
+      class="empty-state"
+      *ngIf="polls.length === 0">
+
+      <h3>No polls found</h3>
+      <p>There are no active polls available right now.</p>
+
+    </div>
+
+
+    <div
+      class="poll-card"
+      *ngFor="let poll of polls">
+
+      <div class="poll-header">
+
+        <span class="category">
+          {{ poll.category }}
+        </span>
+
+        <span
+          class="status"
+          [class.closed]="poll.status === 'closed'">
+
+          {{ poll.status }}
+
+        </span>
+
+      </div>
+
+      <h2>{{ poll.title }}</h2>
+
+      <p class="description">
+        {{ poll.description }}
+      </p>
+
+      <div class="poll-location">
+        📍 {{ poll.location.city }}, {{ poll.location.state }}
+      </div>
+
+      <div class="poll-options">
+
+        <div
+          class="poll-option"
+          *ngFor="let option of poll.options">
+
+          <span>{{ option.text }}</span>
+
+          <button
+            *ngIf="poll.status === 'active'"
+            (click)="vote(poll, option._id!)">
+
+            Vote
+
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="poll-footer">
+
+        <span>
+          {{ poll.totalVotes }} votes
+        </span>
+
+        <span>
+          Created {{ poll.createdAt | date:'mediumDate' }}
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
