@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -17,6 +17,7 @@ import {
 export class PollsComponent implements OnInit {
 
   private pollService = inject(PollService);
+  private cdr = inject(ChangeDetectorRef);
 
   polls: Poll[] = [];
 
@@ -77,11 +78,13 @@ export class PollsComponent implements OnInit {
       next: (response) => {
         this.polls = response?.data?.polls || [];
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Failed to load polls:', error);
         this.errorMessage = 'Unable to load polls.';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -94,6 +97,10 @@ export class PollsComponent implements OnInit {
 
   addOption(): void {
     this.newPoll.options.push('');
+  }
+
+  trackByIndex(index: number): number {
+  return index;
   }
 
   removeOption(index: number): void {
@@ -125,8 +132,10 @@ export class PollsComponent implements OnInit {
       return;
     }
 
-    if (!this.newPoll.location.city.trim() ||
-        !this.newPoll.location.state.trim()) {
+    if (
+      !this.newPoll.location.city.trim() ||
+      !this.newPoll.location.state.trim()
+    ) {
       this.errorMessage = 'City and state are required.';
       return;
     }
@@ -156,6 +165,7 @@ export class PollsComponent implements OnInit {
           error?.error?.message || 'Failed to create poll.';
 
         this.submitting = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -180,25 +190,26 @@ export class PollsComponent implements OnInit {
     };
   }
 
-vote(poll: Poll, optionId: string): void {
-  if (!optionId) {
-    return;
-  }
-
-  // Clear previous messages before voting
-  this.successMessage = '';
-  this.errorMessage = '';
-
-  this.pollService.votePoll(poll._id, optionId).subscribe({
-    next: () => {
-      this.successMessage = 'Vote submitted successfully!';
-      this.loadPolls();
-    },
-    error: (error) => {
-      console.error('Vote failed:', error);
-      this.errorMessage =
-        error?.error?.message || 'Unable to submit vote.';
+  vote(poll: Poll, optionId: string): void {
+    if (!optionId) {
+      return;
     }
-  });
-}
+
+    // Clear previous messages before voting
+    this.successMessage = '';
+    this.errorMessage = '';
+
+    this.pollService.votePoll(poll._id, optionId).subscribe({
+      next: () => {
+        this.successMessage = 'Vote submitted successfully!';
+        this.loadPolls();
+      },
+      error: (error) => {
+        console.error('Vote failed:', error);
+        this.errorMessage =
+          error?.error?.message || 'Unable to submit vote.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
 }

@@ -87,7 +87,7 @@
 
       <div
         class="option-row"
-        *ngFor="let option of newPoll.options; let i = index">
+        *ngFor="let option of newPoll.options; let i = index; trackBy: trackByIndex">
 
         <input
           type="text"

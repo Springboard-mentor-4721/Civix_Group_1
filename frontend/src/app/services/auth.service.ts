@@ -29,6 +29,13 @@ export class AuthService {
     );
   }
 
+  changePassword(payload: { currentPassword: string; newPassword: string }): Observable<any> {
+  return this.http.patch<any>(
+    `${API_BASE_URL}/auth/change-password`,
+    payload
+  );
+}
+
   getCurrentUser(): Observable<UserResponse> {
     return this.http.get<UserResponse>(`${API_BASE_URL}/auth/me`).pipe(
       tap(({ data }) => this.currentUserSignal.set(data.user)),

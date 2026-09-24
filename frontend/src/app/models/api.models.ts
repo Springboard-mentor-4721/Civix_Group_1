@@ -18,6 +18,7 @@ export interface User {
   _id: string;
   name: string;
   email: string;
+  phone?: string | null;
   role: 'citizen' | 'official';
   location: Location;
   verification: Verification;
@@ -60,3 +61,16 @@ export interface RegisterPayload {
 
 export type AuthResponse = ApiSuccess<AuthData>;
 export type UserResponse = ApiSuccess<{ user: User }>;
+
+export interface DashboardStats {
+  myPetitions: number;
+  successfulPetitions: number;
+  pollsParticipated: number;
+  activePetitionsNearYou: number;
+  petitionsPendingReview: number;
+  resolvedGrievances: number;
+  activeMunicipalPolls: number;
+  incomingPetitionsForDepartmentReview: number;
+}
+
+export type DashboardResponse = ApiSuccess<{ stats: DashboardStats }>;
