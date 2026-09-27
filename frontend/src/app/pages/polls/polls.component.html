@@ -216,6 +216,7 @@
   <!-- Poll List -->
   <div class="poll-list" *ngIf="!loading">
 
+    <!-- Empty State -->
     <div
       class="empty-state"
       *ngIf="polls.length === 0">
@@ -226,10 +227,12 @@
     </div>
 
 
+    <!-- Poll Card -->
     <div
       class="poll-card"
       *ngFor="let poll of polls">
 
+      <!-- Poll Header -->
       <div class="poll-header">
 
         <span class="category">
@@ -246,6 +249,8 @@
 
       </div>
 
+
+      <!-- Poll Details -->
       <h2>{{ poll.title }}</h2>
 
       <p class="description">
@@ -256,13 +261,17 @@
         📍 {{ poll.location.city }}, {{ poll.location.state }}
       </div>
 
+
+      <!-- Poll Options -->
       <div class="poll-options">
 
         <div
           class="poll-option"
           *ngFor="let option of poll.options">
 
-          <span>{{ option.text }}</span>
+          <span>
+            {{ option.text }}
+          </span>
 
           <button
             *ngIf="poll.status === 'active'"
@@ -276,6 +285,8 @@
 
       </div>
 
+
+      <!-- Poll Footer -->
       <div class="poll-footer">
 
         <span>
@@ -285,6 +296,107 @@
         <span>
           Created {{ poll.createdAt | date:'mediumDate' }}
         </span>
+
+      </div>
+
+
+      <!-- ============================= -->
+      <!-- VIEW RESULTS BUTTON -->
+      <!-- ============================= -->
+
+      <div class="results-action">
+
+        <button
+          type="button"
+          class="results-btn"
+          (click)="toggleResults(poll)"
+          [disabled]="resultsLoading[poll._id]">
+
+          {{
+            resultsLoading[poll._id]
+              ? 'Loading Results...'
+              : (
+                  showResults[poll._id]
+                    ? 'Hide Results'
+                    : 'View Results'
+                )
+          }}
+
+        </button>
+
+      </div>
+
+
+      <!-- ============================= -->
+      <!-- POLL RESULTS -->
+      <!-- ============================= -->
+
+      <div
+        class="results-section"
+        *ngIf="
+          showResults[poll._id] &&
+          pollResults[poll._id]
+        ">
+
+        <!-- Results Header -->
+        <div class="results-header">
+
+          <h3>Poll Results</h3>
+
+          <span>
+            {{ pollResults[poll._id].totalVotes }} total votes
+          </span>
+
+        </div>
+
+
+        <!-- Each Result Option -->
+        <div
+          class="result-option"
+          *ngFor="
+            let option
+            of pollResults[poll._id].options
+          ">
+
+          <!-- Option Name + Percentage -->
+          <div class="result-info">
+
+            <span class="result-option-name">
+              {{ option.text }}
+            </span>
+
+            <span class="result-percentage">
+              {{ option.percentage }}%
+            </span>
+
+          </div>
+
+
+          <!-- Percentage Bar -->
+          <div class="result-bar">
+
+            <div
+              class="result-bar-fill"
+              [style.width.%]="option.percentage">
+            </div>
+
+          </div>
+
+
+          <!-- Vote Count -->
+          <div class="result-votes">
+
+            {{ option.votesCount }}
+
+            {{
+              option.votesCount === 1
+                ? 'vote'
+                : 'votes'
+            }}
+
+          </div>
+
+        </div>
 
       </div>
 

@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
 import {
   PollService,
   Poll,
@@ -15,7 +16,6 @@ import {
   styleUrl: './polls.component.css'
 })
 export class PollsComponent implements OnInit {
-
   private pollService = inject(PollService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -23,6 +23,7 @@ export class PollsComponent implements OnInit {
 
   loading = false;
   submitting = false;
+
   errorMessage = '';
   successMessage = '';
 
@@ -30,6 +31,11 @@ export class PollsComponent implements OnInit {
 
   search = '';
   selectedCategory = '';
+
+  // Poll results
+  showResults: { [pollId: string]: boolean } = {};
+  pollResults: { [pollId: string]: any } = {};
+  resultsLoading: { [pollId: string]: boolean } = {};
 
   categories = [
     'Infrastructure',
@@ -69,24 +75,26 @@ export class PollsComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    this.pollService.getPolls({
-      search: this.search,
-      category: this.selectedCategory,
-      page: 1,
-      limit: 20
-    }).subscribe({
-      next: (response) => {
-        this.polls = response?.data?.polls || [];
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Failed to load polls:', error);
-        this.errorMessage = 'Unable to load polls.';
-        this.loading = false;
-        this.cdr.detectChanges();
-      }
-    });
+    this.pollService
+      .getPolls({
+        search: this.search,
+        category: this.selectedCategory,
+        page: 1,
+        limit: 20
+      })
+      .subscribe({
+        next: (response) => {
+          this.polls = response?.data?.polls || [];
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Failed to load polls:', error);
+          this.errorMessage = 'Unable to load polls.';
+          this.loading = false;
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   toggleAddPoll(): void {
@@ -100,7 +108,7 @@ export class PollsComponent implements OnInit {
   }
 
   trackByIndex(index: number): number {
-  return index;
+    return index;
   }
 
   removeOption(index: number): void {
@@ -114,8 +122,8 @@ export class PollsComponent implements OnInit {
     this.errorMessage = '';
 
     const validOptions = this.newPoll.options
-      .map(option => option.trim())
-      .filter(option => option.length > 0);
+      .map((option) => option.trim())
+      .filter((option) => option.length > 0);
 
     if (!this.newPoll.title.trim()) {
       this.errorMessage = 'Please enter a poll title.';
@@ -154,16 +162,13 @@ export class PollsComponent implements OnInit {
         this.successMessage = 'Poll created successfully!';
         this.submitting = false;
         this.showAddPoll = false;
-
         this.resetForm();
         this.loadPolls();
       },
       error: (error) => {
         console.error('Failed to create poll:', error);
-
         this.errorMessage =
           error?.error?.message || 'Failed to create poll.';
-
         this.submitting = false;
         this.cdr.detectChanges();
       }
@@ -202,12 +207,62 @@ export class PollsComponent implements OnInit {
     this.pollService.votePoll(poll._id, optionId).subscribe({
       next: () => {
         this.successMessage = 'Vote submitted successfully!';
+
+        // Clear previously loaded results so they are refreshed
+        // after the new vote.
+        delete this.pollResults[poll._id];
+
         this.loadPolls();
       },
       error: (error) => {
         console.error('Vote failed:', error);
         this.errorMessage =
           error?.error?.message || 'Unable to submit vote.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  toggleResults(poll: Poll): void {
+    const pollId = poll._id;
+
+    // If results are currently visible, hide them.
+    if (this.showResults[pollId]) {
+      this.showResults[pollId] = false;
+      return;
+    }
+
+    // If results were already loaded, show them without
+    // making another API request.
+    if (this.pollResults[pollId]) {
+      this.showResults[pollId] = true;
+      return;
+    }
+
+    // Load results from the backend.
+    this.resultsLoading[pollId] = true;
+
+    this.pollService.getPollResults(pollId).subscribe({
+      next: (response) => {
+        this.pollResults[pollId] =
+          response?.data?.results ??
+          response?.results ??
+          response;
+
+        this.showResults[pollId] = true;
+        this.resultsLoading[pollId] = false;
+
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading poll results:', error);
+
+        this.resultsLoading[pollId] = false;
+        this.showResults[pollId] = false;
+
+        this.errorMessage =
+          error?.error?.message || 'Unable to load poll results.';
+
         this.cdr.detectChanges();
       }
     });

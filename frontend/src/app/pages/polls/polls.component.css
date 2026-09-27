@@ -366,3 +366,189 @@
     gap: 6px;
   }
 }
+
+/* ==========================================
+   POLL RESULTS
+   ========================================== */
+
+.results-action {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.results-btn {
+  min-width: 130px;
+  padding: 9px 18px;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.results-btn:hover:not(:disabled) {
+  background: #2563eb;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.results-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* ==========================================
+   RESULTS CARD
+   ========================================== */
+
+.results-section {
+  margin-top: 14px;
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  animation: resultsAppear 0.25s ease-out;
+}
+
+@keyframes resultsAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ==========================================
+   RESULTS HEADER
+   ========================================== */
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.results-header h3 {
+  margin: 0;
+  color: #172033;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.results-header span {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+
+/* ==========================================
+   INDIVIDUAL RESULT
+   ========================================== */
+
+.result-option {
+  margin-bottom: 20px;
+}
+
+.result-option:last-child {
+  margin-bottom: 0;
+}
+
+
+/* ==========================================
+   OPTION NAME + PERCENTAGE
+   ========================================== */
+
+.result-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 7px;
+}
+
+.result-option-name {
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.result-percentage {
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+
+/* ==========================================
+   RESULT BAR
+   ========================================== */
+
+.result-bar {
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.result-bar-fill {
+  height: 100%;
+  min-width: 0;
+  background: #2563eb;
+  border-radius: 10px;
+  transition: width 0.7s ease;
+}
+
+
+/* ==========================================
+   VOTE COUNT
+   ========================================== */
+
+.result-votes {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
+/* ==========================================
+   MOBILE
+   ========================================== */
+
+@media (max-width: 600px) {
+
+  .results-action {
+    justify-content: stretch;
+  }
+
+  .results-btn {
+    width: 100%;
+  }
+
+  .results-section {
+    padding: 15px;
+  }
+
+  .results-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+}
