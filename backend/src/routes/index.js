@@ -23,4 +23,12 @@ router.use('/petitions', petitionRoutes);
 const pollRoutes = require('./poll.routes');
 router.use('/polls', pollRoutes);
 
+// Official routes
+const officialRoutes = require('./official.routes');
+router.use('/official', officialRoutes);
+
+// Report routes
+const reportRoutes = require('./report.routes');
+router.use('/reports', reportRoutes);
+
 module.exports = router;

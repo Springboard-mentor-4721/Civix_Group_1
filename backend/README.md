@@ -1,11 +1,12 @@
-# Civix Backend Service (Milestones 1, 2 & 3)
+# Civix Backend Service (Milestones 1, 2, 3 & 4)
 
-Civix is a Digital Civic Engagement & Petition Platform designed to empower citizens and government officials to engage transparently on civic issues, petitions, polling, sentiment tracking, and governance reporting.
+Civix is a Digital Civic Engagement & Petition Platform designed to empower citizens and government officials to engage transparently on civic issues, petitions, polling, sentiment tracking, official response workflows, and monthly civic engagement reporting.
 
 This service constitutes the **REST API Backend** for:
 - **Milestone 1:** User Roles & Verification (Authentication, JWT, Roles, Profile, Change Password)
 - **Milestone 2:** Petition Creation & Management (Create, View, Sign, Search, Filter, Pagination, Edit/Delete before signatures)
 - **Milestone 3:** Issue-Specific Polls, Public Voting & Live Sentiment Tracking (Poll Creation, Public Voting, Sentiment Results Dashboard, Status Management)
+- **Milestone 4:** Official Portal & Engagement Reporting (Locality-Aware Petition Dashboard, Official Responses, Status Updates, Monthly Reports, CSV Exports)
 
 ---
 
@@ -33,31 +34,40 @@ backend/
 │   ├── controllers/
 │   │   ├── auth.controller.js    # Auth HTTP controllers (register, login, me, change-password)
 │   │   ├── petition.controller.js# Petition HTTP controllers (CRUD, signing, search, filter)
-│   │   └── poll.controller.js    # Poll HTTP controllers (CRUD, voting, results, status)
+│   │   ├── poll.controller.js    # Poll HTTP controllers (CRUD, voting, results, status)
+│   │   ├── official.controller.js# Official portal controllers (locality dashboard, response, status)
+│   │   └── report.controller.js  # Reporting controllers (monthly engagement analytics, CSV export)
 │   ├── middleware/
 │   │   ├── auth.middleware.js    # JWT authentication middleware
 │   │   ├── role.middleware.js    # Role-based access control (citizen / official)
 │   │   ├── validate.middleware.js# Express-validator error handling middleware
 │   │   └── error.middleware.js   # Centralized error handler & 404 handler
 │   ├── models/
-│   │   ├── user.model.js         # Mongoose User model (authentication & profile)
+│   │   ├── user.model.js         # Mongoose User model (authentication, role, jurisdiction)
 │   │   ├── petition.model.js     # Mongoose Petition model
 │   │   ├── signature.model.js    # Mongoose Signature model (unique petition signing)
 │   │   ├── poll.model.js         # Mongoose Poll model (options, votesCount, totalVotes)
-│   │   └── vote.model.js         # Mongoose Vote model (unique poll voting constraint)
+│   │   ├── vote.model.js         # Mongoose Vote model (unique poll voting constraint)
+│   │   └── official-response.model.js # Mongoose OfficialResponse model (status history & comments)
 │   ├── routes/
 │   │   ├── auth.routes.js        # Auth endpoint definitions (/api/auth)
 │   │   ├── petition.routes.js    # Petition endpoint definitions (/api/petitions)
 │   │   ├── poll.routes.js        # Poll endpoint definitions (/api/polls)
+│   │   ├── official.routes.js    # Official portal definitions (/api/official)
+│   │   ├── report.routes.js      # Reporting definitions (/api/reports)
 │   │   └── index.js              # Central API router aggregator
 │   ├── services/
 │   │   ├── auth.service.js       # Authentication business logic & password handling
 │   │   ├── petition.service.js   # Petition business logic, signing, search, filter
-│   │   └── poll.service.js       # Poll business logic, atomic voting, sentiment calculations
+│   │   ├── poll.service.js       # Poll business logic, atomic voting, sentiment calculations
+│   │   ├── official.service.js   # Official locality filtering, response audit history, status updates
+│   │   └── report.service.js     # Monthly engagement metric aggregations & RFC-4180 CSV export
 │   ├── validators/
 │   │   ├── auth.validator.js     # Payload validation rules for auth routes
 │   │   ├── petition.validator.js # Payload and query validation rules for petitions
-│   │   └── poll.validator.js     # Payload and query validation rules for polls & voting
+│   │   ├── poll.validator.js     # Payload and query validation rules for polls & voting
+│   │   ├── official.validator.js # Payload and query validation rules for official responses & queries
+│   │   └── report.validator.js   # Payload and query validation rules for monthly reports & exports
 │   ├── utils/
 │   │   ├── response.js           # Standardized API response formatters
 │   │   └── token.js              # JWT generation and verification utilities
@@ -66,7 +76,9 @@ backend/
 ├── tests/
 │   ├── auth.test.js              # Integration test suite for Milestone 1 auth endpoints
 │   ├── petition.test.js          # Integration test suite for Milestone 2 petition endpoints
-│   └── poll.test.js              # Integration test suite for Milestone 3 poll & voting endpoints
+│   ├── poll.test.js              # Integration test suite for Milestone 3 poll & voting endpoints
+│   ├── official.test.js          # Integration test suite for Milestone 4 official portal & responses
+│   └── report.test.js            # Integration test suite for Milestone 4 monthly reports & CSV export
 ├── .env.example                  # Environment configuration template
 ├── .gitignore                    # Git ignore file for backend
 ├── package.json                  # Dependencies, metadata, and scripts
@@ -115,7 +127,7 @@ npm test
 
 ---
 
-## 📡 API Reference
+## 📡 Complete API Reference
 
 ### Standard Response Format
 
@@ -144,7 +156,7 @@ npm test
 
 ---
 
-### 🔑 Milestone 1: Authentication & User Management Endpoints
+### 🔑 Milestone 1: Authentication & User Management
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
@@ -155,7 +167,7 @@ npm test
 
 ---
 
-### 📋 Milestone 2: Petition Management & Signing Endpoints
+### 📋 Milestone 2: Petition Management & Signing
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
@@ -169,7 +181,7 @@ npm test
 
 ---
 
-### 📊 Milestone 3: Polls, Public Voting & Live Sentiment Tracking Endpoints
+### 📊 Milestone 3: Polls, Public Voting & Live Sentiment Tracking
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
@@ -184,126 +196,61 @@ npm test
 
 ---
 
-### 💡 Milestone 3 API Usage Examples
+### 🏛️ Milestone 4: Official Dashboard, Response Workflow & Monthly Reports
 
-#### 1. Create a Poll (`POST /api/polls`)
-**Headers:** `Authorization: Bearer <token>`
-
-**Request Body:**
-```json
-{
-  "title": "Should the city implement a 24/7 bus lane on Outer Ring Road?",
-  "description": "We are gathering citizen opinions on dedicated bus transit corridors to reduce traffic congestion.",
-  "category": "Transportation",
-  "options": [
-    "Yes, 24/7 dedicated lane",
-    "Yes, but peak hours only",
-    "No, it will increase car traffic"
-  ],
-  "location": {
-    "city": "Bengaluru",
-    "state": "Karnataka",
-    "address": "Outer Ring Road Corridor",
-    "pincode": "560103"
-  },
-  "endDate": "2026-10-31T23:59:59.000Z",
-  "relatedPetition": "67be184b2e8a123456789abc"
-}
-```
-
-**Response (`201 Created`):**
-```json
-{
-  "success": true,
-  "message": "Poll created successfully",
-  "data": {
-    "poll": {
-      "_id": "67be201f3e8a123456789def",
-      "title": "Should the city implement a 24/7 bus lane on Outer Ring Road?",
-      "description": "We are gathering citizen opinions on dedicated bus transit corridors...",
-      "category": "Transportation",
-      "options": [
-        {
-          "_id": "67be201f3e8a123456789de1",
-          "text": "Yes, 24/7 dedicated lane",
-          "votesCount": 0
-        },
-        {
-          "_id": "67be201f3e8a123456789de2",
-          "text": "Yes, but peak hours only",
-          "votesCount": 0
-        },
-        {
-          "_id": "67be201f3e8a123456789de3",
-          "text": "No, it will increase car traffic",
-          "votesCount": 0
-        }
-      ],
-      "totalVotes": 0,
-      "status": "active",
-      "location": {
-        "city": "Bengaluru",
-        "state": "Karnataka",
-        "address": "Outer Ring Road Corridor",
-        "pincode": "560103"
-      },
-      "createdBy": {
-        "_id": "67be0c5f2b84784a9e53b491",
-        "name": "Citizen One",
-        "email": "citizen1@civix.org",
-        "role": "citizen"
-      },
-      "relatedPetition": {
-        "_id": "67be184b2e8a123456789abc",
-        "title": "Construct Solar-Powered Bus Shelters in Koramangala",
-        "category": "Transportation",
-        "status": "active"
-      },
-      "createdAt": "2026-08-28T19:00:00.000Z",
-      "updatedAt": "2026-08-28T19:00:00.000Z"
-    }
-  }
-}
-```
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/official/petitions` | Official Only | View petitions relevant to official's locality (with search/filters/pagination) |
+| `POST` | `/api/official/petitions/:id/response` | Official Only | Submit official comment, update status (`under_review`/`closed`/`active`) |
+| `PATCH` | `/api/official/petitions/:id/status` | Official Only | Update petition status with optional department/title context |
+| `GET` | `/api/official/petitions/:id/responses` | Protected | Retrieve full chronological official response history for a petition |
+| `GET` | `/api/petitions/:id/responses` | Public / All | Direct alias to retrieve official response history for a petition |
+| `GET` | `/api/reports/monthly` | Public / All | Retrieve structured monthly civic engagement report metrics (JSON) |
+| `GET` | `/api/reports/monthly/export` | Public / All | Download monthly engagement report as an RFC-4180 formatted CSV |
 
 ---
 
-#### 2. Query Polls (`GET /api/polls`)
-**Query Parameters:**
-- `search=corridor` (searches title and description)
-- `category=Transportation`
-- `city=Bengaluru`
+### 💡 Milestone 4 API Usage Examples
+
+#### 1. Official Locality Dashboard (`GET /api/official/petitions`)
+**Headers:** `Authorization: Bearer <official_token>`
+
+**Query Parameters (Optional):**
+- `city=Bengaluru` (overrides official's profile city if specified)
 - `state=Karnataka`
-- `status=active` (or `closed`)
-- `relatedPetition=67be184b2e8a123456789abc`
-- `sortBy=totalVotes`
-- `order=desc`
+- `status=under_review` (or `active`, `closed`)
+- `category=Infrastructure`
+- `search=potholes`
 - `page=1`
 - `limit=10`
+- `sortBy=createdAt`
+- `order=desc`
 
 **Response (`200 OK`):**
 ```json
 {
   "success": true,
-  "message": "Polls retrieved successfully",
+  "message": "Locality petitions retrieved successfully",
   "data": {
-    "polls": [
+    "petitions": [
       {
-        "_id": "67be201f3e8a123456789def",
-        "title": "Should the city implement a 24/7 bus lane on Outer Ring Road?",
-        "category": "Transportation",
-        "totalVotes": 42,
-        "status": "active",
+        "_id": "67be184b2e8a123456789abc",
+        "title": "Fix Severe Potholes on MG Road Bengaluru",
+        "description": "The MG Road stretch near the metro station has numerous deep potholes...",
+        "category": "Infrastructure",
+        "status": "under_review",
+        "signaturesCount": 142,
         "location": {
           "city": "Bengaluru",
-          "state": "Karnataka"
+          "state": "Karnataka",
+          "address": "MG Road"
         },
-        "createdBy": {
+        "creator": {
           "_id": "67be0c5f2b84784a9e53b491",
-          "name": "Citizen One",
+          "name": "Citizen Jane",
           "role": "citizen"
         },
-        "createdAt": "2026-08-28T19:00:00.000Z"
+        "createdAt": "2026-09-01T10:00:00.000Z"
       }
     ],
     "pagination": {
@@ -313,6 +260,10 @@ npm test
       "totalPages": 1,
       "hasNextPage": false,
       "hasPrevPage": false
+    },
+    "officialJurisdiction": {
+      "city": "Bengaluru",
+      "state": "Karnataka"
     }
   }
 }
@@ -320,62 +271,47 @@ npm test
 
 ---
 
-#### 3. Cast a Vote (`POST /api/polls/:id/vote`)
-**Headers:** `Authorization: Bearer <token>`
+#### 2. Official Response to Petition (`POST /api/official/petitions/:id/response`)
+**Headers:** `Authorization: Bearer <official_token>`
 
 **Request Body:**
 ```json
 {
-  "optionId": "67be201f3e8a123456789de1"
+  "comment": "An engineering inspection team has assessed the road damage. Tenders are now invited for road resurfacing.",
+  "status": "under_review",
+  "department": "Bruhat Bengaluru Mahanagara Palike (BBMP) - Road Infrastructure",
+  "officialTitle": "Executive City Engineer"
 }
 ```
 
-**Response (`200 OK`):**
+**Response (`201 Created`):**
 ```json
 {
   "success": true,
-  "message": "Vote recorded successfully",
+  "message": "Official response recorded successfully",
   "data": {
-    "vote": {
-      "pollId": "67be201f3e8a123456789def",
-      "optionId": "67be201f3e8a123456789de1",
-      "votedAt": "2026-08-28T19:05:00.000Z"
+    "officialResponse": {
+      "_id": "67be300f4e8a123456789aaa",
+      "petition": "67be184b2e8a123456789abc",
+      "official": {
+        "_id": "67be0c5f2b84784a9e53b999",
+        "name": "Officer Bengaluru",
+        "email": "officer.blr@gov.org",
+        "role": "official",
+        "location": { "city": "Bengaluru", "state": "Karnataka" }
+      },
+      "comment": "An engineering inspection team has assessed the road damage. Tenders are now invited for road resurfacing.",
+      "previousStatus": "active",
+      "newStatus": "under_review",
+      "department": "Bruhat Bengaluru Mahanagara Palike (BBMP) - Road Infrastructure",
+      "officialTitle": "Executive City Engineer",
+      "createdAt": "2026-09-05T14:30:00.000Z",
+      "updatedAt": "2026-09-05T14:30:00.000Z"
     },
-    "poll": {
-      "_id": "67be201f3e8a123456789def",
-      "totalVotes": 1,
-      "options": [
-        {
-          "_id": "67be201f3e8a123456789de1",
-          "text": "Yes, 24/7 dedicated lane",
-          "votesCount": 1
-        }
-      ]
-    },
-    "results": {
-      "pollId": "67be201f3e8a123456789def",
-      "title": "Should the city implement a 24/7 bus lane on Outer Ring Road?",
-      "totalVotes": 1,
-      "options": [
-        {
-          "_id": "67be201f3e8a123456789de1",
-          "text": "Yes, 24/7 dedicated lane",
-          "votesCount": 1,
-          "percentage": 100.0
-        },
-        {
-          "_id": "67be201f3e8a123456789de2",
-          "text": "Yes, but peak hours only",
-          "votesCount": 0,
-          "percentage": 0.0
-        },
-        {
-          "_id": "67be201f3e8a123456789de3",
-          "text": "No, it will increase car traffic",
-          "votesCount": 0,
-          "percentage": 0.0
-        }
-      ]
+    "petition": {
+      "_id": "67be184b2e8a123456789abc",
+      "title": "Fix Severe Potholes on MG Road Bengaluru",
+      "status": "under_review"
     }
   }
 }
@@ -383,48 +319,106 @@ npm test
 
 ---
 
-#### 4. Live Sentiment / Poll Results Dashboard (`GET /api/polls/:id/results`)
-**Access:** Public
+#### 3. View Petition Response History (`GET /api/petitions/:id/responses`)
+**Access:** Public / Authenticated
 
 **Response (`200 OK`):**
 ```json
 {
   "success": true,
-  "message": "Poll results retrieved successfully",
+  "message": "Petition responses retrieved successfully",
   "data": {
-    "results": {
-      "pollId": "67be201f3e8a123456789def",
-      "title": "Should the city implement a 24/7 bus lane on Outer Ring Road?",
-      "description": "We are gathering citizen opinions on dedicated bus transit corridors...",
-      "category": "Transportation",
-      "status": "active",
-      "totalVotes": 150,
-      "options": [
-        {
-          "_id": "67be201f3e8a123456789de1",
-          "text": "Yes, 24/7 dedicated lane",
-          "votesCount": 90,
-          "percentage": 60.0
+    "petitionId": "67be184b2e8a123456789abc",
+    "totalResponses": 1,
+    "responses": [
+      {
+        "_id": "67be300f4e8a123456789aaa",
+        "official": {
+          "name": "Officer Bengaluru",
+          "email": "officer.blr@gov.org",
+          "role": "official"
         },
-        {
-          "_id": "67be201f3e8a123456789de2",
-          "text": "Yes, but peak hours only",
-          "votesCount": 45,
-          "percentage": 30.0
-        },
-        {
-          "_id": "67be201f3e8a123456789de3",
-          "text": "No, it will increase car traffic",
-          "votesCount": 15,
-          "percentage": 10.0
-        }
-      ],
-      "startDate": "2026-08-28T19:00:00.000Z",
-      "endDate": "2026-10-31T23:59:59.000Z",
-      "location": {
-        "city": "Bengaluru",
-        "state": "Karnataka",
-        "address": "Outer Ring Road Corridor"
+        "comment": "An engineering inspection team has assessed the road damage...",
+        "previousStatus": "active",
+        "newStatus": "under_review",
+        "department": "BBMP Road Infrastructure",
+        "createdAt": "2026-09-05T14:30:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+#### 4. Monthly Civic Engagement Report (`GET /api/reports/monthly`)
+**Query Parameters (Optional):**
+- `month=9`
+- `year=2026`
+- `city=Bengaluru` (optional locality filter)
+- `category=Infrastructure` (optional category filter)
+
+**Response (`200 OK`):**
+```json
+{
+  "success": true,
+  "message": "Monthly civic engagement report generated successfully",
+  "data": {
+    "period": {
+      "month": 9,
+      "monthName": "September",
+      "year": 2026,
+      "startDate": "2026-09-01T00:00:00.000Z",
+      "endDate": "2026-09-30T23:59:59.999Z"
+    },
+    "filters": {
+      "city": "Bengaluru",
+      "state": null,
+      "category": null
+    },
+    "summary": {
+      "totalEngagementActivities": 312,
+      "totalPetitions": 14,
+      "totalSignatures": 195,
+      "totalPolls": 5,
+      "totalVotes": 90,
+      "totalOfficialResponses": 8
+    },
+    "petitions": {
+      "total": 14,
+      "byStatus": {
+        "active": 6,
+        "under_review": 5,
+        "closed": 3,
+        "draft": 0,
+        "flagged": 0
+      },
+      "byCategory": {
+        "Infrastructure": 8,
+        "Environment": 4,
+        "Transportation": 2
+      },
+      "byCity": {
+        "Bengaluru": 14
+      }
+    },
+    "polls": {
+      "total": 5,
+      "byStatus": {
+        "active": 4,
+        "closed": 1
+      },
+      "byCategory": {
+        "Transportation": 3,
+        "Environment": 2
+      }
+    },
+    "officialResponses": {
+      "total": 8,
+      "byNewStatus": {
+        "under_review": 5,
+        "closed": 3,
+        "active": 0
       }
     }
   }
@@ -433,44 +427,65 @@ npm test
 
 ---
 
-#### 5. Close / Update Poll Status (`PATCH /api/polls/:id/status`)
-**Headers:** `Authorization: Bearer <token>`
-- **Access:** Restricted to the poll creator or users with the `official` role.
+#### 5. Export Monthly Report as CSV (`GET /api/reports/monthly/export`)
+**Headers received:**
+- `Content-Type: text/csv; charset=utf-8`
+- `Content-Disposition: attachment; filename="civic-engagement-report-2026-09.csv"`
 
-**Request Body:**
-```json
-{
-  "status": "closed"
-}
-```
+**CSV Content Body Preview:**
+```csv
+"Civix Digital Civic Engagement Monthly Report"
+"Period","September 2026"
+"Start Date","2026-09-01T00:00:00.000Z"
+"End Date","2026-09-30T23:59:59.999Z"
 
-**Response (`200 OK`):**
-```json
-{
-  "success": true,
-  "message": "Poll status updated successfully",
-  "data": {
-    "poll": {
-      "_id": "67be201f3e8a123456789def",
-      "status": "closed"
-    }
-  }
-}
+"--- EXECUTIVE SUMMARY ---"
+"Metric","Count"
+"Total Civic Engagement Activities","312"
+"Total Petitions Created","14"
+"Total Signatures Gathered","195"
+"Total Polls Created","5"
+"Total Votes Cast","90"
+"Total Official Responses","8"
+
+"--- PETITIONS BY STATUS ---"
+"Status","Count"
+"active","6"
+"under_review","5"
+"closed","3"
+
+"--- PETITIONS BY CATEGORY ---"
+"Category","Count"
+"Infrastructure","8"
+"Environment","4"
+"Transportation","2"
+
+"--- POLLS BY STATUS & CATEGORY ---"
+"Metric","Value","Count"
+"Status","active","4"
+"Status","closed","1"
+"Category","Transportation","3"
+"Category","Environment","2"
+
+"--- OFFICIAL RESPONSES BY RESOLUTION STATUS ---"
+"Resolution Status","Count"
+"under_review","5"
+"closed","3"
 ```
 
 ---
 
-## 🔒 Security & Voting Rules
+## 🔒 Security, Authorization & Business Rules
 
-1. **Duplicate Vote Prevention:**
-   - Enforced at the application level and the database layer via a unique compound index on the `Vote` model: `{ poll: 1, user: 1 }, { unique: true }`.
-   - Repeated voting attempts by the same user return `400 Bad Request` (`You have already voted on this poll`).
-2. **Atomic Vote Counting:**
-   - Option vote counts and total poll votes are updated atomically using MongoDB `$inc` operators (`'options.$.votesCount': 1, totalVotes: 1`) to eliminate concurrency race conditions.
-3. **Closed Poll Protection:**
-   - Once a poll status becomes `closed` (or its `endDate` passes), new votes are rejected (`400 Bad Request`), while poll results remain public and viewable for sentiment analysis.
-4. **Poll Modification & Deletion Rules:**
-   - Only the poll creator or official can close a poll.
-   - Deletion is only permitted before any votes have been cast (`totalVotes === 0`).
-5. **Data Privacy:**
-   - Voter identities are securely stored in the `Vote` collection for auditability and duplicate prevention, but individual vote-user mappings are never exposed in public results endpoints.
+1. **Role-Based Access Control:**
+   - Official endpoints (`/api/official/*`) require valid JWT authentication AND user role `official`.
+   - Citizen users attempting official actions receive `403 Forbidden` (`Access denied. Requires one of the following roles: official`).
+2. **Petition Status Lifecycle:**
+   - Supported statuses: `draft`, `active`, `under_review`, `closed`, `flagged`.
+   - Officials can transition petitions through governance phases (e.g. `active` -> `under_review` -> `closed`).
+3. **Audit History & Response Immutability:**
+   - Every response or status change initiated by an official is persisted as an `OfficialResponse` record linking the petition, official, timestamps, comments, previous status, and new status.
+4. **Locality Awareness:**
+   - The official dashboard automatically defaults to the official's registered city/state while allowing flexible query overrides for regional directors.
+5. **Robust Engagement Aggregation:**
+   - Monthly reports compute accurate metrics across all 5 key engagement collections: Petitions, Signatures, Polls, Votes, and Official Responses.
