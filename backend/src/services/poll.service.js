@@ -1,25 +1,14 @@
 const Poll = require('../models/poll.model');
 const Vote = require('../models/vote.model');
+const Petition = require('../models/petition.model');
 
 class PollService {
-  /**
-   * Helper to format poll results with percentages
-   */
   formatResults(poll) {
     const totalVotes = poll.totalVotes || 0;
     const optionsResults = (poll.options || []).map((option) => {
       const votesCount = option.votesCount || 0;
-      const percentage =
-        totalVotes > 0
-          ? Number(((votesCount / totalVotes) * 100).toFixed(1))
-          : 0;
-
-      return {
-        _id: option._id,
-        text: option.text,
-        votesCount,
-        percentage
-      };
+      const percentage = totalVotes > 0 ? Number(((votesCount / totalVotes) * 100).toFixed(1)) : 0;
+      return { _id: option._id, text: option.text, votesCount, percentage };
     });
 
     return {
@@ -36,28 +25,12 @@ class PollService {
     };
   }
 
-  /**
-   * Create a new poll
-   */
   async create(userId, pollData) {
-    const {
-      title,
-      description,
-      category,
-      options,
-      location,
-      endDate,
-      relatedPetition,
-      status
-    } = pollData;
+    const { title, description, category, options, location, endDate, relatedPetition, status } = pollData;
 
-    // Format options ensuring votesCount is initialized to 0
     const formattedOptions = (options || []).map((opt) => {
       const text = typeof opt === 'object' && opt !== null ? opt.text : opt;
-      return {
-        text: String(text).trim(),
-        votesCount: 0
-      };
+      return { text: String(text).trim(), votesCount: 0 };
     });
 
     const poll = await Poll.create({
@@ -74,67 +47,46 @@ class PollService {
     });
 
     return await poll.populate([
-      { path: 'createdBy', select: 'name email role location' },
-      { path: 'relatedPetition', select: 'title category status' }
+      { path: 'createdBy', select: 'name email role location' }
     ]);
   }
 
-  /**
-   * Find polls with search, filtering, and pagination
-   */
   async findAll(queryParams = {}) {
     const page = Math.max(1, parseInt(queryParams.page, 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(queryParams.limit, 10) || 10));
     const skip = (page - 1) * limit;
-
+    
+    // Base filter
     const filter = {};
+    if (queryParams.category) filter.category = queryParams.category;
+    if (queryParams.city) filter['location.city'] = new RegExp(queryParams.city.trim(), 'i');
+    if (queryParams.state) filter['location.state'] = new RegExp(queryParams.state.trim(), 'i');
 
-    // Default to active polls unless specifically queried
-    if (queryParams.status) {
-      filter.status = queryParams.status;
+    // Automatically route expired polls to "closed"
+    const now = new Date();
+    if (queryParams.status === 'closed') {
+      filter.$or = [
+        { status: 'closed' },
+        { endDate: { $lt: now, $ne: null } }
+      ];
     } else {
       filter.status = 'active';
-    }
-
-    // Category filter
-    if (queryParams.category) {
-      filter.category = queryParams.category;
-    }
-
-    // City & State filters
-    if (queryParams.city) {
-      filter['location.city'] = new RegExp(queryParams.city.trim(), 'i');
-    }
-    if (queryParams.state) {
-      filter['location.state'] = new RegExp(queryParams.state.trim(), 'i');
-    }
-
-    // Related petition filter
-    if (queryParams.relatedPetition) {
-      filter.relatedPetition = queryParams.relatedPetition;
-    }
-
-    // Keyword search (searches title and description)
-    if (queryParams.search && queryParams.search.trim()) {
-      const searchRegex = new RegExp(queryParams.search.trim(), 'i');
-      filter.$or = [
-        { title: searchRegex },
-        { description: searchRegex }
+      filter.$and = [
+        { $or: [{ endDate: null }, { endDate: { $gt: now } }] }
       ];
     }
 
-    // Sorting
+    if (queryParams.search && queryParams.search.trim()) {
+      const searchRegex = new RegExp(queryParams.search.trim(), 'i');
+      filter.$or = [{ title: searchRegex }, { description: searchRegex }];
+    }
+
     const sortBy = queryParams.sortBy || 'createdAt';
     const order = queryParams.order === 'asc' ? 1 : -1;
     const sort = { [sortBy]: order };
 
     const [polls, total] = await Promise.all([
-      Poll.find(filter)
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .populate('createdBy', 'name email role location')
-        .populate('relatedPetition', 'title category status'),
+      Poll.find(filter).sort(sort).skip(skip).limit(limit).populate('createdBy', 'name email role location'),
       Poll.countDocuments(filter)
     ]);
 
@@ -142,46 +94,25 @@ class PollService {
 
     return {
       polls,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
-      }
+      pagination: { total, page, limit, totalPages, hasNextPage: page < totalPages, hasPrevPage: page > 1 }
     };
   }
 
-  /**
-   * Find polls created by a specific user
-   */
   async findByUser(userId, queryParams = {}) {
     const page = Math.max(1, parseInt(queryParams.page, 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(queryParams.limit, 10) || 10));
     const skip = (page - 1) * limit;
-
     const filter = { createdBy: userId };
 
-    if (queryParams.status) {
-      filter.status = queryParams.status;
-    }
-
-    if (queryParams.category) {
-      filter.category = queryParams.category;
-    }
+    if (queryParams.status) filter.status = queryParams.status;
+    if (queryParams.category) filter.category = queryParams.category;
 
     const sortBy = queryParams.sortBy || 'createdAt';
     const order = queryParams.order === 'asc' ? 1 : -1;
     const sort = { [sortBy]: order };
 
     const [polls, total] = await Promise.all([
-      Poll.find(filter)
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .populate('createdBy', 'name email role location')
-        .populate('relatedPetition', 'title category status'),
+      Poll.find(filter).sort(sort).skip(skip).limit(limit).populate('createdBy', 'name email role location'),
       Poll.countDocuments(filter)
     ]);
 
@@ -189,60 +120,29 @@ class PollService {
 
     return {
       polls,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
-      }
+      pagination: { total, page, limit, totalPages, hasNextPage: page < totalPages, hasPrevPage: page > 1 }
     };
   }
 
-  /**
-   * Find a single poll by ID
-   */
   async findById(pollId) {
-    const poll = await Poll.findById(pollId)
-      .populate('createdBy', 'name email role location')
-      .populate('relatedPetition', 'title category status');
-
+    const poll = await Poll.findById(pollId).populate('createdBy', 'name email role location');
     if (!poll) {
       const error = new Error('Poll not found');
       error.statusCode = 404;
       throw error;
     }
-
     return poll;
   }
 
-  /**
-   * Vote on a poll
-   */
   async vote(pollId, userId, optionId) {
     const poll = await Poll.findById(pollId);
-
     if (!poll) {
       const error = new Error('Poll not found');
       error.statusCode = 404;
       throw error;
     }
-
-    // Check if poll is closed
-    if (poll.status === 'closed') {
-      const error = new Error('Cannot vote on a closed poll');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    if (poll.status !== 'active') {
-      const error = new Error('Cannot vote on a poll that is not active');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    // Check if endDate has passed
+    
+    // Auto-close check during vote cast
     if (poll.endDate && new Date(poll.endDate) < new Date()) {
       poll.status = 'closed';
       await poll.save();
@@ -250,37 +150,22 @@ class PollService {
       error.statusCode = 400;
       throw error;
     }
+    
+    if (poll.status !== 'active') {
+      const error = new Error('Cannot vote on a poll that is not active');
+      error.statusCode = 400;
+      throw error;
+    }
 
-    // Verify option exists in poll
-    const optionExists = poll.options.some(
-      (opt) => opt._id.toString() === optionId.toString()
-    );
-
+    const optionExists = poll.options.some((opt) => opt._id.toString() === optionId.toString());
     if (!optionExists) {
       const error = new Error('Selected option does not exist in this poll');
       error.statusCode = 400;
       throw error;
     }
 
-    // Check if user has already voted
-    const existingVote = await Vote.findOne({
-      poll: pollId,
-      user: userId
-    });
-
-    if (existingVote) {
-      const error = new Error('You have already voted on this poll');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    // Create Vote record with duplicate key handling
     try {
-      await Vote.create({
-        poll: pollId,
-        user: userId,
-        optionId
-      });
+      await Vote.create({ poll: pollId, user: userId, optionId });
     } catch (err) {
       if (err.code === 11000) {
         const error = new Error('You have already voted on this poll');
@@ -290,109 +175,65 @@ class PollService {
       throw err;
     }
 
-    // Atomically increment option vote count and total votes
     const updatedPoll = await Poll.findOneAndUpdate(
       { _id: pollId, 'options._id': optionId },
-      {
-        $inc: {
-          'options.$.votesCount': 1,
-          totalVotes: 1
-        }
-      },
+      { $inc: { 'options.$.votesCount': 1, totalVotes: 1 } },
       { new: true }
     ).populate('createdBy', 'name email role location');
 
-    const results = this.formatResults(updatedPoll);
-
     return {
-      vote: {
-        pollId: updatedPoll._id,
-        optionId,
-        votedAt: new Date()
-      },
+      vote: { pollId: updatedPoll._id, optionId, votedAt: new Date() },
       poll: updatedPoll,
-      results
+      results: this.formatResults(updatedPoll)
     };
   }
 
-  /**
-   * Get poll results / live sentiment
-   */
   async getResults(pollId) {
-    const poll = await Poll.findById(pollId).populate(
-      'createdBy',
-      'name email role location'
-    );
-
+    const poll = await Poll.findById(pollId).populate('createdBy', 'name email role location');
     if (!poll) {
       const error = new Error('Poll not found');
       error.statusCode = 404;
       throw error;
     }
-
     return this.formatResults(poll);
   }
 
-  /**
-   * Update poll status (e.g. close poll)
-   */
   async updateStatus(pollId, userId, userRole, newStatus) {
     const poll = await Poll.findById(pollId);
-
     if (!poll) {
       const error = new Error('Poll not found');
       error.statusCode = 404;
       throw error;
     }
-
-    // Verify creator ownership or official role
     if (poll.createdBy.toString() !== userId.toString() && userRole !== 'official') {
       const error = new Error('You are not authorized to update this poll');
       error.statusCode = 403;
       throw error;
     }
-
     poll.status = newStatus;
     await poll.save();
-
-    return await poll.populate([
-      { path: 'createdBy', select: 'name email role location' },
-      { path: 'relatedPetition', select: 'title category status' }
-    ]);
+    return await poll.populate([{ path: 'createdBy', select: 'name email role location' }]);
   }
 
-  /**
-   * Delete a poll (allowed only if no votes cast)
-   */
   async delete(pollId, userId, userRole) {
     const poll = await Poll.findById(pollId);
-
     if (!poll) {
       const error = new Error('Poll not found');
       error.statusCode = 404;
       throw error;
     }
-
-    // Verify creator ownership or official role
     if (poll.createdBy.toString() !== userId.toString() && userRole !== 'official') {
       const error = new Error('You are not authorized to delete this poll');
       error.statusCode = 403;
       throw error;
     }
-
-    // Prevent deleting if votes have already been cast
     if (poll.totalVotes > 0) {
       const error = new Error('Cannot delete a poll that has already received votes');
       error.statusCode = 400;
       throw error;
     }
-
     await Poll.findByIdAndDelete(pollId);
-
-    return {
-      deleted: true,
-      id: pollId
-    };
+    return { deleted: true, id: pollId };
   }
 }
 

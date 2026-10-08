@@ -2,9 +2,6 @@ const pollService = require('../services/poll.service');
 const { sendSuccess } = require('../utils/response');
 
 class PollController {
-  /**
-   * Create a new poll
-   */
   async createPoll(req, res, next) {
     try {
       const poll = await pollService.create(req.user._id, req.body);
@@ -14,9 +11,6 @@ class PollController {
     }
   }
 
-  /**
-   * Get all polls with search, filtering, and pagination
-   */
   async getPolls(req, res, next) {
     try {
       const result = await pollService.findAll(req.query);
@@ -26,9 +20,6 @@ class PollController {
     }
   }
 
-  /**
-   * Get current user's polls
-   */
   async getMyPolls(req, res, next) {
     try {
       const result = await pollService.findByUser(req.user._id, req.query);
@@ -38,9 +29,6 @@ class PollController {
     }
   }
 
-  /**
-   * Get a single poll by ID
-   */
   async getPollById(req, res, next) {
     try {
       const poll = await pollService.findById(req.params.id);
@@ -50,9 +38,6 @@ class PollController {
     }
   }
 
-  /**
-   * Cast a vote on a poll
-   */
   async votePoll(req, res, next) {
     try {
       const result = await pollService.vote(
@@ -66,9 +51,6 @@ class PollController {
     }
   }
 
-  /**
-   * Get live results / sentiment for a poll
-   */
   async getPollResults(req, res, next) {
     try {
       const results = await pollService.getResults(req.params.id);
@@ -78,9 +60,6 @@ class PollController {
     }
   }
 
-  /**
-   * Update poll status (e.g. close poll)
-   */
   async updatePollStatus(req, res, next) {
     try {
       const poll = await pollService.updateStatus(
@@ -95,9 +74,6 @@ class PollController {
     }
   }
 
-  /**
-   * Delete a poll
-   */
   async deletePoll(req, res, next) {
     try {
       const result = await pollService.delete(

@@ -6,9 +6,9 @@ import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { PollsComponent } from './pages/polls/polls.component';
 
 import { Petitions } from './pages/petitions/petitions.component';
-import { Polls } from './pages/polls/polls';
 import { Officials } from './pages/officials/officials';
 import { Reports } from './pages/reports/reports.component';
 import { Settings } from './pages/settings/settings.component';
@@ -22,7 +22,7 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
 
   { path: 'petitions', component: Petitions, canActivate: [authGuard] },
-  { path: 'polls', component: Polls, canActivate: [authGuard] },
+  { path: 'polls', component: PollsComponent, canActivate: [authGuard] },
   { path: 'officials', component: Officials, canActivate: [authGuard] },
   { path: 'reports', component: Reports, canActivate: [authGuard] },
   { path: 'settings', component: Settings, canActivate: [authGuard] },

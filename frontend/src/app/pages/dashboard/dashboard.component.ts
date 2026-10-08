@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -24,9 +24,9 @@ export class DashboardComponent implements OnInit {
     activeMunicipalPolls: 0,
     incomingPetitionsForDepartmentReview: 0
   };
+  
   loading: boolean = true;
   selectedCategory: string = 'All Categories';
-
   categories: string[] = [
     'All Categories',
     'Environment',
@@ -41,7 +41,8 @@ export class DashboardComponent implements OnInit {
   constructor(
     public authService: AuthService,
     private readonly dashboardService: DashboardService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef // Injected to force UI refreshes
   ) {}
 
   ngOnInit(): void {
@@ -51,13 +52,11 @@ export class DashboardComponent implements OnInit {
       this.fetchStats();
       return;
     }
-
     const token = this.authService.getToken();
     if (!token) {
       this.loading = false;
       return;
     }
-
     this.authService.restoreSession().subscribe({
       next: () => {
         this.fetchProfile();
@@ -65,20 +64,22 @@ export class DashboardComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
   fetchProfile(): void {
     this.loading = true;
-
     this.authService.getCurrentUser().subscribe({
       next: (res: any) => {
         this.user = res?.data?.user || res?.data || res;
         this.loading = false;
+        this.cdr.detectChanges(); // Force screen to update name/role
       },
       error: () => {
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -88,11 +89,13 @@ export class DashboardComponent implements OnInit {
       next: (res) => {
         const incomingStats = res?.data?.stats;
         if (incomingStats && typeof incomingStats === 'object') {
+          // Update stats and immediately alert Angular to redraw the numbers
           this.stats = { ...this.stats, ...incomingStats };
+          this.cdr.detectChanges(); 
         }
       },
       error: () => {
-        // keep the current stats instead of overwriting with zero on an expired/empty response
+        this.cdr.detectChanges(); 
       }
     });
   }
@@ -102,9 +105,7 @@ export class DashboardComponent implements OnInit {
   }
 
   get userInitial(): string {
-    return this.user?.name
-      ? this.user.name.charAt(0).toUpperCase()
-      : 'U';
+    return this.user?.name ? this.user.name.charAt(0).toUpperCase() : 'U';
   }
 
   setCategory(cat: string): void {

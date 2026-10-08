@@ -1,468 +1,170 @@
-<div class="polls-page">
-
-  <!-- HEADER -->
-  <section class="page-header">
-
+<div class="poll-page">
+  <!-- Header -->
+  <div class="page-header">
     <div>
-      <span class="eyebrow">PUBLIC VOICE</span>
-
-      <h1>Polls</h1>
-
-      <p>
-        Participate in community polls and share your voice on issues
-        that matter to your neighborhood.
-      </p>
+      <h1>Public Polls</h1>
+      <p>Share your opinion and participate in civic decisions.</p>
     </div>
-
-    <button
-      class="create-btn"
-      (click)="openCreatePoll()">
-
-      + Create Poll
-
+    <button class="add-btn" (click)="toggleAddPoll()">
+      {{ showAddPoll ? 'Close' : '+ Add Poll' }}
     </button>
-
-  </section>
-
-
-  <!-- TABS -->
-  <div class="tabs">
-
-    <button
-      [class.active]="activeTab === 'active'"
-      (click)="selectTab('active')">
-
-      Active
-
-    </button>
-
-    <button
-      [class.active]="activeTab === 'voted'"
-      (click)="selectTab('voted')">
-
-      Voted on
-
-    </button>
-
-    <button
-      [class.active]="activeTab === 'my'"
-      (click)="selectTab('my')">
-
-      My Polls
-
-    </button>
-
-    <button
-      [class.active]="activeTab === 'closed'"
-      (click)="selectTab('closed')">
-
-      Closed
-
-    </button>
-
   </div>
 
+  <!-- Messages -->
+  <div class="message success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+  <div class="message error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
 
-  <!-- FILTERS -->
-  <section class="filters">
-
-    <div class="filter-item">
-
-      <span class="filter-icon">📍</span>
-
-      <select
-        [value]="selectedLocation"
-        (change)="selectedLocation = $any($event.target).value">
-
-        @for (location of locations; track location) {
-
-          <option [value]="location">
-            {{ location }}
-          </option>
-
-        }
-
-      </select>
-
+  <!-- Add Poll Form -->
+  <div class="add-poll-card" *ngIf="showAddPoll">
+    <h2>Create a New Poll</h2>
+    <div class="form-group">
+      <label>Poll Title *</label>
+      <input type="text" [(ngModel)]="newPoll.title" placeholder="Enter poll title" maxlength="200">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea [(ngModel)]="newPoll.description" placeholder="Describe the issue or question..." rows="4" maxlength="2000"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Category *</label>
+        <select [(ngModel)]="newPoll.category">
+          <option value="">Select category</option>
+          <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>End Date</label>
+        <input type="date" [(ngModel)]="newPoll.endDate">
+      </div>
     </div>
 
-
-    <div class="filter-item">
-
-      <span class="filter-icon">⚑</span>
-
-      <select
-        [value]="selectedCategory"
-        (change)="selectedCategory = $any($event.target).value">
-
-        @for (category of categories; track category) {
-
-          <option [value]="category">
-            {{ category }}
-          </option>
-
-        }
-
-      </select>
-
+    <!-- Options -->
+    <div class="options-section">
+      <div class="section-title">
+        <label>Poll Options *</label>
+        <button type="button" class="small-btn" (click)="addOption()">+ Add Option</button>
+      </div>
+      <div class="option-row" *ngFor="let option of formOptions; let i = index">
+        <input type="text" [(ngModel)]="option.text" name="option_{{i}}" placeholder="Option {{ i + 1 }}">
+        <button *ngIf="formOptions.length > 2" type="button" class="remove-btn" (click)="removeOption(i)">×</button>
+      </div>
     </div>
 
-
-    <button
-      class="clear-btn"
-      (click)="clearFilters()">
-
-      Clear Filters
-
-    </button>
-
-  </section>
-
-
-  <!-- POLLS -->
-  <section class="poll-list">
-
-    @for (poll of filteredPolls; track poll.question) {
-
-      <article class="poll-card">
-
-        <!-- TOP -->
-        <div class="poll-top">
-
-          <div class="poll-main">
-
-            <h2>
-              {{ poll.question }}
-            </h2>
-
-            <p class="description">
-              {{ poll.description }}
-            </p>
-
-            <div class="meta">
-
-              <span>
-                <strong>CATEGORY:</strong>
-                {{ poll.category }}
-              </span>
-
-              <span>
-                📍
-                <strong>LOCATION:</strong>
-                {{ poll.location }}
-              </span>
-
-              <span>
-                👤
-                <strong>CREATED BY:</strong>
-                {{ poll.createdBy }}
-              </span>
-
-            </div>
-
-          </div>
-
-
-          <div class="poll-stats">
-
-            <strong>
-              {{ poll.totalVotes }} votes
-            </strong>
-
-            @if (poll.status === 'ACTIVE') {
-
-              <span>
-                Closes {{ poll.closesOn }}
-              </span>
-
-            } @else {
-
-              <span class="closed">
-                Closed
-              </span>
-
-            }
-
-          </div>
-
-        </div>
-
-
-        <!-- ACTIVE POLL -->
-        @if (poll.status === 'ACTIVE') {
-
-          <div class="options">
-
-            @for (option of poll.options; track option.text) {
-
-              <label
-                class="option"
-                [class.selected]="
-                  selectedOptions[poll.question] === option.text
-                ">
-
-                <input
-                  type="radio"
-                  [name]="poll.question"
-                  [value]="option.text"
-                  [checked]="
-                    selectedOptions[poll.question] === option.text
-                  "
-                  (change)="selectOption(poll, option)">
-
-                <span>
-                  {{ option.text }}
-                </span>
-
-              </label>
-
-            }
-
-          </div>
-
-
-          <button
-            class="vote-btn"
-            (click)="submitVote(poll)">
-
-            Submit Vote
-
-          </button>
-
-        }
-
-
-        <!-- RESULTS -->
-        @if (poll.status === 'CLOSED') {
-
-          <div class="results">
-
-            <h3>
-              Results
-            </h3>
-
-            @for (option of poll.options; track option.text) {
-
-              <div class="result-row">
-
-                <div class="result-info">
-
-                  <span>
-                    {{ option.text }}
-                  </span>
-
-                  <strong>
-                    {{ getPercentage(option, poll) }}%
-                    ({{ option.votes }})
-                  </strong>
-
-                </div>
-
-
-                <div class="result-bar">
-
-                  <div
-                    class="result-fill"
-                    [style.width.%]="getPercentage(option, poll)">
-                  </div>
-
-                </div>
-
-              </div>
-
-            }
-
-          </div>
-
-        }
-
-      </article>
-
-    }
-
-
-    <!-- EMPTY STATE -->
-    @if (filteredPolls.length === 0) {
-
-      <div class="empty-state">
-
-        <div class="empty-icon">
-          📊
-        </div>
-
-        <h2>
-          No Polls Found
-        </h2>
-
-        <p>
-          Try adjusting your location or category filters.
-        </p>
-
-        <button
-          class="clear-btn"
-          (click)="clearFilters()">
-
-          Clear Filters
-
-        </button>
-
+    <!-- Location -->
+    <h3>Location</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>City *</label>
+        <input type="text" [(ngModel)]="newPoll.location.city" placeholder="Nagpur">
+      </div>
+      <div class="form-group">
+        <label>State *</label>
+        <input type="text" [(ngModel)]="newPoll.location.state" placeholder="Maharashtra">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" [(ngModel)]="newPoll.location.address" placeholder="Optional address">
+      </div>
+      <div class="form-group">
+        <label>Pincode</label>
+        <input type="text" [(ngModel)]="newPoll.location.pincode" placeholder="440001">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="cancel-btn" (click)="toggleAddPoll()">Cancel</button>
+      <button type="button" class="submit-btn" [disabled]="submitting" (click)="createPoll()">
+        {{ submitting ? 'Creating...' : 'Create Poll' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- View Toggles & Filters -->
+  <div class="filter-card" style="flex-direction: column; gap: 15px;">
+    
+    <!-- Tab Section -->
+    <div style="display: flex; gap: 10px; width: 100%; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+      <button class="small-btn" [style.background]="currentView === 'active' ? '#4f46e5' : '#e5e7eb'" [style.color]="currentView === 'active' ? 'white' : '#374151'" (click)="switchView('active')">
+        Active Polls
+      </button>
+      <button class="small-btn" [style.background]="currentView === 'closed' ? '#4f46e5' : '#e5e7eb'" [style.color]="currentView === 'closed' ? 'white' : '#374151'" (click)="switchView('closed')">
+        Completed Polls (Results)
+      </button>
+    </div>
+
+    <!-- Search Section -->
+    <div style="display: flex; gap: 15px; width: 100%; align-items: center;">
+      <div class="search-box" style="flex: 1; margin: 0;">
+        <input type="text" [(ngModel)]="search" placeholder="Search {{ currentView }} polls..." (keyup.enter)="loadPolls()">
+        <button (click)="loadPolls()">Search</button>
+      </div>
+      <select [(ngModel)]="selectedCategory" (change)="loadPolls()">
+        <option value="">All Categories</option>
+        <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    Loading polls...
+  </div>
+
+  <!-- Poll List -->
+  <div class="poll-list" *ngIf="!loading">
+    <div class="empty-state" *ngIf="polls.length === 0">
+      <h3>No {{ currentView }} polls found</h3>
+      <p>There are no {{ currentView }} polls available right now.</p>
+    </div>
+    
+    <div class="poll-card" *ngFor="let poll of polls">
+      <div class="poll-header">
+        <span class="category">{{ poll.category }}</span>
+        <span class="status" [class.closed]="currentView === 'closed'">{{ currentView === 'closed' ? 'closed' : 'active' }}</span>
+      </div>
+      <h2>{{ poll.title }}</h2>
+      <p class="description">{{ poll.description }}</p>
+      
+      <div class="poll-location" style="margin-bottom: 15px;">
+        📍 {{ poll.location.city }}, {{ poll.location.state }}
       </div>
 
-    }
+      <!-- ACTIVE POLL VIEW: Show buttons for voting -->
+      <div class="poll-options" *ngIf="currentView === 'active'">
+        <div class="poll-option" *ngFor="let option of poll.options">
+          <span>{{ option.text }}</span>
+          <button (click)="vote(poll, option._id!)">Vote</button>
+        </div>
+      </div>
 
-  </section>
+      <!-- COMPLETED POLL VIEW: Exact Percentage Bar Design -->
+      <div class="poll-results-inline" *ngIf="currentView === 'closed'">
+        <div *ngFor="let option of poll.options" class="option-item">
+          <div class="option-info">
+            <span class="option-text">
+              <strong>{{ option.text }}</strong>
+              <span class="vote-count">({{ option.votesCount || 0 }} {{ (option.votesCount === 1) ? 'vote' : 'votes' }})</span>
+            </span>
+            <span class="percentage">{{ getPercentage(option.votesCount || 0, poll.totalVotes) }}%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" [style.width.%]="getPercentage(option.votesCount || 0, poll.totalVotes)"></div>
+          </div>
+        </div>
+      </div>
 
+      <div class="poll-footer">
+        <span>{{ poll.totalVotes }} {{ poll.totalVotes === 1 ? 'person answered' : 'people answered' }}</span>
+        <span>
+           {{ currentView === 'closed' ? 'Ended' : 'Created' }} {{ poll.createdAt | date:'mediumDate' }}
+        </span>
+      </div>
+    </div>
+  </div>
 </div>
-
-
-<!-- CREATE POLL MODAL -->
-
-@if (showCreateModal) {
-
-  <div
-    class="modal-overlay"
-    (click)="closeCreatePoll()">
-
-    <div
-      class="create-modal"
-      (click)="$event.stopPropagation()">
-
-      <div class="modal-header">
-
-        <div>
-
-          <span class="eyebrow">
-            PUBLIC FEEDBACK
-          </span>
-
-          <h2>
-            Create New Poll
-          </h2>
-
-        </div>
-
-        <button
-          class="close-btn"
-          (click)="closeCreatePoll()">
-
-          ×
-
-        </button>
-
-      </div>
-
-
-      <div class="form-group">
-
-        <label>
-          Poll Question
-        </label>
-
-        <input
-          type="text"
-          placeholder="Enter your poll question">
-
-      </div>
-
-
-      <div class="form-group">
-
-        <label>
-          Description
-        </label>
-
-        <textarea
-          rows="4"
-          placeholder="Explain what you want the community to decide">
-        </textarea>
-
-      </div>
-
-
-      <div class="form-row">
-
-        <div class="form-group">
-
-          <label>
-            Category
-          </label>
-
-          <select>
-
-            <option>
-              Select Category
-            </option>
-
-            @for (
-              category of categories.slice(1);
-              track category
-            ) {
-
-              <option>
-                {{ category }}
-              </option>
-
-            }
-
-          </select>
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label>
-            Location
-          </label>
-
-          <input
-            type="text"
-            placeholder="e.g. Delhi">
-
-        </div>
-
-      </div>
-
-
-      <div class="form-group">
-
-        <label>
-          Poll Options
-        </label>
-
-        <input
-          type="text"
-          placeholder="Option 1">
-
-        <input
-          type="text"
-          placeholder="Option 2">
-
-      </div>
-
-
-      <div class="modal-actions">
-
-        <button
-          class="cancel-btn"
-          (click)="closeCreatePoll()">
-
-          Cancel
-
-        </button>
-
-        <button
-          class="save-btn"
-          (click)="closeCreatePoll()">
-
-          Create Poll
-
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-}
