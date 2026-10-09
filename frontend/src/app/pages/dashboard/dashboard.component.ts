@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { DashboardService } from '../../services/dashboard.service';
@@ -8,7 +9,7 @@ import { DashboardStats, User } from '../../models/api.models';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -24,7 +25,7 @@ export class DashboardComponent implements OnInit {
     activeMunicipalPolls: 0,
     incomingPetitionsForDepartmentReview: 0
   };
-  
+
   loading: boolean = true;
   selectedCategory: string = 'All Categories';
   categories: string[] = [
@@ -38,29 +39,43 @@ export class DashboardComponent implements OnInit {
     'Housing'
   ];
 
+  feedPetitions: any[] = [];
+  selectedPetitionForResponse: any = null;
+  responsePayload = {
+    status: 'under_review' as 'under_review' | 'closed' | 'active',
+    comment: ''
+  };
+  submittingResponse: boolean = false;
+
   constructor(
     public authService: AuthService,
     private readonly dashboardService: DashboardService,
     private router: Router,
-    private cdr: ChangeDetectorRef // Injected to force UI refreshes
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     const currentUser = this.authService.currentUser();
     if (currentUser) {
+      this.user = currentUser;
       this.fetchProfile();
       this.fetchStats();
+      this.fetchFeed();
       return;
     }
+
     const token = this.authService.getToken();
     if (!token) {
       this.loading = false;
       return;
     }
+
     this.authService.restoreSession().subscribe({
-      next: () => {
+      next: (usr) => {
+        if (usr) this.user = usr;
         this.fetchProfile();
         this.fetchStats();
+        this.fetchFeed();
       },
       error: () => {
         this.loading = false;
@@ -75,7 +90,8 @@ export class DashboardComponent implements OnInit {
       next: (res: any) => {
         this.user = res?.data?.user || res?.data || res;
         this.loading = false;
-        this.cdr.detectChanges(); // Force screen to update name/role
+        this.fetchFeed();
+        this.cdr.detectChanges();
       },
       error: () => {
         this.loading = false;
@@ -89,15 +105,44 @@ export class DashboardComponent implements OnInit {
       next: (res) => {
         const incomingStats = res?.data?.stats;
         if (incomingStats && typeof incomingStats === 'object') {
-          // Update stats and immediately alert Angular to redraw the numbers
           this.stats = { ...this.stats, ...incomingStats };
-          this.cdr.detectChanges(); 
+          this.cdr.detectChanges();
         }
       },
       error: () => {
-        this.cdr.detectChanges(); 
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  fetchFeed(): void {
+    const query = {
+      category: this.selectedCategory !== 'All Categories' ? this.selectedCategory : undefined
+    };
+
+    if (this.isOfficial) {
+      this.dashboardService.getLocalityPetitions(query).subscribe({
+        next: (res) => {
+          this.feedPetitions = res?.data?.petitions || res?.petitions || [];
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.feedPetitions = [];
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      this.dashboardService.getPetitions(query).subscribe({
+        next: (res) => {
+          this.feedPetitions = res?.data?.petitions || res?.petitions || [];
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.feedPetitions = [];
+          this.cdr.detectChanges();
+        }
+      });
+    }
   }
 
   get isOfficial(): boolean {
@@ -110,10 +155,47 @@ export class DashboardComponent implements OnInit {
 
   setCategory(cat: string): void {
     this.selectedCategory = cat;
+    this.fetchFeed();
   }
 
   clearFilters(): void {
     this.selectedCategory = 'All Categories';
+    this.fetchFeed();
+  }
+
+  openResponseModal(petition: any): void {
+    this.selectedPetitionForResponse = petition;
+    this.responsePayload = {
+      status: petition.status === 'active' ? 'under_review' : petition.status,
+      comment: ''
+    };
+  }
+
+  closeResponseModal(): void {
+    this.selectedPetitionForResponse = null;
+  }
+
+  submitOfficialAction(): void {
+    if (!this.selectedPetitionForResponse || !this.responsePayload.comment.trim()) return;
+
+    this.submittingResponse = true;
+    this.dashboardService
+      .respondToPetition(this.selectedPetitionForResponse._id, this.responsePayload)
+      .subscribe({
+        next: () => {
+          this.selectedPetitionForResponse.status = this.responsePayload.status;
+          this.submittingResponse = false;
+          this.closeResponseModal();
+          this.fetchStats();
+          this.fetchFeed();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Failed to submit official response:', err);
+          this.submittingResponse = false;
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   logout(): void {

@@ -117,7 +117,6 @@
       <!-- STAT COUNTER CARDS -->
       <div class="stats-row">
         @if (isOfficial) {
-        <!-- OFFICIAL CARD 1 -->
         <a class="stat-box stat-link" routerLink="/petitions">
           <div class="stat-top">
             <span class="stat-label">Petitions Pending Review</span>
@@ -126,7 +125,6 @@
           <div class="stat-value">{{ stats.petitionsPendingReview }}</div>
           <span class="stat-footer-text">awaiting response</span>
         </a>
-        <!-- OFFICIAL CARD 2 -->
         <a class="stat-box stat-link" routerLink="/reports">
           <div class="stat-top">
             <span class="stat-label">Resolved Grievances</span>
@@ -135,7 +133,6 @@
           <div class="stat-value">{{ stats.resolvedGrievances }}</div>
           <span class="stat-footer-text">completed actions</span>
         </a>
-        <!-- OFFICIAL CARD 3 -->
         <a class="stat-box stat-link" routerLink="/polls">
           <div class="stat-top">
             <span class="stat-label">Active Municipal Polls</span>
@@ -145,7 +142,6 @@
           <span class="stat-footer-text">live feedback</span>
         </a>
         } @else {
-        <!-- CITIZEN CARD 1 -->
         <a class="stat-box stat-link" routerLink="/petitions">
           <div class="stat-top">
             <span class="stat-label">My Petitions</span>
@@ -154,7 +150,6 @@
           <div class="stat-value">{{ stats.myPetitions }}</div>
           <span class="stat-footer-text">petitions</span>
         </a>
-        <!-- CITIZEN CARD 2 -->
         <a class="stat-box stat-link" routerLink="/petitions">
           <div class="stat-top">
             <span class="stat-label">Successful Petitions</span>
@@ -163,7 +158,6 @@
           <div class="stat-value">{{ stats.successfulPetitions }}</div>
           <span class="stat-footer-text">or under review</span>
         </a>
-        <!-- CITIZEN CARD 3 -->
         <a class="stat-box stat-link" routerLink="/polls">
           <div class="stat-top">
             <span class="stat-label">Polls Participated</span>
@@ -201,6 +195,33 @@
           }
         </div>
 
+        <!-- FEED ITEMS -->
+        @if (feedPetitions.length > 0) {
+        <div class="feed-cards-container">
+          @for (petition of feedPetitions; track petition._id) {
+          <div class="feed-item-card">
+            <div class="feed-item-main">
+              <div class="feed-item-header">
+                <h3 class="feed-item-title">{{ petition.title }}</h3>
+                <span class="status-pill" [ngClass]="petition.status">{{ petition.status }}</span>
+              </div>
+              <p class="feed-item-desc">{{ petition.description }}</p>
+              <div class="feed-item-metadata">
+                <span>📍 {{ petition.location?.city || 'Local' }}, {{ petition.location?.state }}</span>
+                <span>✍️ {{ petition.signaturesCount || 0 }} signatures</span>
+                <span>🏷️ {{ petition.category }}</span>
+              </div>
+            </div>
+
+            @if (isOfficial) {
+            <button type="button" class="action-respond-btn" (click)="openResponseModal(petition)">
+              Respond / Update
+            </button>
+            }
+          </div>
+          }
+        </div>
+        } @else {
         <!-- EMPTY STATE -->
         <div class="empty-state-card">
           <p class="empty-text">
@@ -210,7 +231,57 @@
             Clear Filters
           </button>
         </div>
+        }
       </section>
     </main>
   </div>
+
+  <!-- OFFICIAL RESPONSE MODAL -->
+  @if (selectedPetitionForResponse) {
+  <div class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-top">
+        <h3 class="modal-heading">Official Petition Response</h3>
+        <button type="button" class="modal-close" (click)="closeResponseModal()">✕</button>
+      </div>
+
+      <p class="modal-petition-name">
+        Petition: <strong>{{ selectedPetitionForResponse.title }}</strong>
+      </p>
+
+      <div class="form-field">
+        <label>Update Status</label>
+        <select [(ngModel)]="responsePayload.status" class="field-control">
+          <option value="under_review">Mark Under Review</option>
+          <option value="closed">Close / Resolved</option>
+          <option value="active">Keep Active</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label>Official Comment & Action Plan</label>
+        <textarea
+          rows="4"
+          [(ngModel)]="responsePayload.comment"
+          placeholder="Provide official feedback on citizen demands..."
+          class="field-control"
+        ></textarea>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button type="button" class="btn-cancel" (click)="closeResponseModal()">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="primary-action-btn"
+          (click)="submitOfficialAction()"
+          [disabled]="!responsePayload.comment.trim() || submittingResponse"
+        >
+          {{ submittingResponse ? 'Submitting...' : 'Submit Official Response' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
 </div>

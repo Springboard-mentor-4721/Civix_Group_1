@@ -1,333 +1,255 @@
-<div class="reports-page">
-
-  <!-- HEADER -->
-  <section class="page-header">
-
-    <div>
-      <span class="eyebrow">CIVIC ACCOUNTABILITY</span>
-
-      <h1>Reports</h1>
-
-      <p>
-        Report local issues and track the progress of problems
-        affecting your community.
-      </p>
-    </div>
-
-    <button class="create-btn">
-      + Submit Report
-    </button>
-
-  </section>
-
-
-  <!-- FILTERS -->
-  <section class="filter-section">
-
-    <!-- SEARCH -->
-    <div class="search-box">
-
-      <span class="search-icon">🔍</span>
-
-      <input
-        type="text"
-        placeholder="Search reports..."
-        [(ngModel)]="searchText">
-
-    </div>
-
-
-    <!-- CATEGORY -->
-    <div class="filter-box">
-
-      <span>📂</span>
-
-      <select [(ngModel)]="selectedCategory">
-
-        @for (
-          category of categories;
-          track category
-        ) {
-
-          <option [value]="category">
-            {{ category }}
-          </option>
-
-        }
-
-      </select>
-
-    </div>
-
-
-    <!-- STATUS -->
-    <div class="filter-box">
-
-      <span>◉</span>
-
-      <select [(ngModel)]="selectedStatus">
-
-        @for (
-          status of statuses;
-          track status
-        ) {
-
-          <option [value]="status">
-            {{ status }}
-          </option>
-
-        }
-
-      </select>
-
-    </div>
-
-
-    <!-- LOCATION -->
-    <div class="filter-box">
-
-      <span>📍</span>
-
-      <select [(ngModel)]="selectedLocation">
-
-        @for (
-          location of locations;
-          track location
-        ) {
-
-          <option [value]="location">
-            {{ location }}
-          </option>
-
-        }
-
-      </select>
-
-    </div>
-
-
-    <button
-      class="clear-btn"
-      (click)="clearFilters()">
-
-      Clear Filters
-
-    </button>
-
-  </section>
-
-
-  <!-- RESULT SUMMARY -->
-  <div class="results-header">
-
-    <span>
-      Showing
-      <strong>{{ filteredReports.length }}</strong>
-      reports
-    </span>
-
-  </div>
-
-
-  <!-- REPORT CARDS -->
-  <section class="reports-grid">
-
-    @for (
-      report of filteredReports;
-      track report.title
-    ) {
-
-      <article class="report-card">
-
-        <!-- CARD HEADER -->
-        <div class="report-header">
-
-          <div class="report-title-area">
-
-            <span class="category-tag">
-              {{ report.category }}
-            </span>
-
-            <h2>
-              {{ report.title }}
-            </h2>
-
+<div class="spartan-dashboard-layout">
+  <div class="dashboard-grid">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-column">
+      <!-- Profile Card -->
+      <div class="profile-card">
+        <div class="avatar-row">
+          <div class="avatar-circle" [class.official-avatar]="isOfficial">
+            {{ userInitial }}
           </div>
-
-
-          <span
-            class="status-badge"
-            [class.status-open]="report.status === 'OPEN'"
-            [class.status-progress]="report.status === 'IN PROGRESS'"
-            [class.status-resolved]="report.status === 'RESOLVED'">
-
-            {{ report.status }}
-
+          <div class="name-col">
+            <span class="user-display-name">{{ user?.name || 'Sri' }}</span>
+            <span class="verification-tag">
+              <span class="status-dot verified"></span>
+              {{ isOfficial ? 'Official' : 'Unverified Official' }}
+            </span>
+          </div>
+        </div>
+        <div class="meta-row">
+          <span class="ui-icon">📍</span>
+          <span>
+            {{ user?.location?.city || 'San Diego' }},
+            {{ user?.location?.state || 'CA' }}
           </span>
-
         </div>
-
-
-        <!-- DESCRIPTION -->
-        <p class="description">
-          {{ report.description }}
-        </p>
-
-
-        <!-- PRIORITY -->
-        <div class="priority-row">
-
-          <span class="priority-label">
-            PRIORITY
-          </span>
-
-          <span
-            class="priority-badge"
-            [class.priority-low]="report.priority === 'LOW'"
-            [class.priority-medium]="report.priority === 'MEDIUM'"
-            [class.priority-high]="report.priority === 'HIGH'">
-
-            {{ report.priority }}
-
-          </span>
-
+        <div class="email-row">
+          <span>{{ user?.email || '2041020002.sridhartamarapalli@gmail.com' }}</span>
         </div>
-
-
-        <!-- DETAILS -->
-        <div class="report-details">
-
-          <div class="detail-item">
-
-            <span class="detail-icon">
-              📍
-            </span>
-
-            <div>
-
-              <small>
-                LOCATION
-              </small>
-
-              <p>
-                {{ report.location }}
-              </p>
-
-            </div>
-
-          </div>
-
-
-          <div class="detail-item">
-
-            <span class="detail-icon">
-              👤
-            </span>
-
-            <div>
-
-              <small>
-                REPORTED BY
-              </small>
-
-              <p>
-                {{ report.reportedBy }}
-              </p>
-
-            </div>
-
-          </div>
-
-
-          <div class="detail-item">
-
-            <span class="detail-icon">
-              📅
-            </span>
-
-            <div>
-
-              <small>
-                REPORTED ON
-              </small>
-
-              <p>
-                {{ report.reportedOn }}
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- ACTION -->
-        <div class="report-action">
-
-          <button class="view-btn">
-            View Report Details
-          </button>
-
-        </div>
-
-      </article>
-
-    }
-
-
-    <!-- EMPTY STATE -->
-    @if (filteredReports.length === 0) {
-
-      <div class="empty-state">
-
-        <div class="empty-icon">
-          📋
-        </div>
-
-        <h2>
-          No Reports Found
-        </h2>
-
-        <p>
-          No reports match your current search or filters.
-        </p>
-
-        <button
-          class="clear-btn"
-          (click)="clearFilters()">
-
-          Clear Filters
-
-        </button>
-
       </div>
 
-    }
+      <!-- Navigation Links -->
+      <nav class="sidebar-nav">
+        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
+          <span class="ui-icon">🏠</span>
+          Dashboard
+        </a>
+        @if (isOfficial) {
+        <a routerLink="/petitions" routerLinkActive="active" class="nav-item">
+          <span class="ui-icon">📑</span>
+          Review Petitions
+        </a>
+        <a routerLink="/polls" routerLinkActive="active" class="nav-item">
+          <span class="ui-icon">🗳️</span>
+          Manage Polls
+        </a>
+        <a routerLink="/reports" routerLinkActive="active" class="nav-item">
+          <span class="ui-icon">📊</span>
+          Official Reports
+        </a>
+        } @else {
+        <a routerLink="/petitions" routerLinkActive="active" class="nav-item">
+          <span class="ui-icon">📄</span>
+          Petitions
+        </a>
+        <a routerLink="/polls" routerLinkActive="active" class="nav-item">
+          <span class="ui-icon">📊</span>
+          Polls
+        </a>
+        <a routerLink="/officials" routerLinkActive="active" class="nav-item">
+          <span class="ui-icon">👥</span>
+          Officials
+        </a>
+        <a routerLink="/reports" routerLinkActive="active" class="nav-item">
+          <span class="ui-icon">📈</span>
+          Reports
+        </a>
+        }
+        <a routerLink="/settings" routerLinkActive="active" class="nav-item">
+          <span class="ui-icon">⚙️</span>
+          Settings
+        </a>
+      </nav>
 
-  </section>
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <button type="button" class="btn-logout" (click)="logout()">
+          <span class="ui-icon">🚪</span>
+          Log out
+        </button>
+      </div>
+    </aside>
 
+    <!-- RIGHT MAIN CONTENT -->
+    <main class="content-column">
+      <!-- Header with Export Button -->
+      <div class="reports-header-card">
+        <div class="reports-title-area">
+          <h1 class="welcome-title">Reports & Analytics</h1>
+          <p class="welcome-sub">
+            Track civic engagement and measure the impact of petitions and polls.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="export-btn"
+          (click)="exportData()"
+          [disabled]="exporting"
+        >
+          <span class="ui-icon">📥</span>
+          {{ exporting ? 'Exporting...' : 'Export Data' }}
+        </button>
+      </div>
 
-  <!-- INFORMATION CARD -->
-  <section class="info-card">
+      <!-- Top KPI Summary Cards -->
+      <div class="stats-row">
+        <!-- Total Petitions Card -->
+        <div class="stat-box">
+          <div class="stat-top">
+            <span class="stat-label">Total Petitions</span>
+            <div class="kpi-icon blue-icon">📄</div>
+          </div>
+          <div class="stat-value">{{ reportData?.summary?.totalPetitions ?? 3 }}</div>
+          <span class="trend-text positive">↗ 12% increase from last month</span>
+        </div>
 
-    <div class="info-icon">
-      ℹ
-    </div>
+        <!-- Total Polls Card -->
+        <div class="stat-box">
+          <div class="stat-top">
+            <span class="stat-label">Total Polls</span>
+            <div class="kpi-icon orange-icon">⏱️</div>
+          </div>
+          <div class="stat-value">{{ reportData?.summary?.totalPolls ?? 0 }}</div>
+          <span class="trend-text positive">↗ 8% increase from last month</span>
+        </div>
 
-    <div>
+        <!-- Active Engagement Card -->
+        <div class="stat-box">
+          <div class="stat-top">
+            <span class="stat-label">Active Engagement</span>
+            <div class="kpi-icon green-icon">📈</div>
+          </div>
+          <div class="stat-value">{{ activeEngagementCount }}</div>
+          <span class="stat-footer-text">Active petitions and polls</span>
+        </div>
+      </div>
 
-      <h3>
-        Help improve your community
-      </h3>
+      <!-- Tab Buttons -->
+      <div class="tab-pills-row">
+        <button
+          type="button"
+          class="tab-pill"
+          [class.active]="activeTab === 'community'"
+          (click)="activeTab = 'community'"
+        >
+          Community Overview
+        </button>
+        <button
+          type="button"
+          class="tab-pill"
+          [class.active]="activeTab === 'activity'"
+          (click)="activeTab = 'activity'"
+        >
+          My Activity
+        </button>
+      </div>
 
-      <p>
-        Reporting local issues helps public officials identify
-        problems and take appropriate action.
-      </p>
+      <!-- Community Overview Breakdown -->
+      @if (activeTab === 'community') {
+      <div class="charts-grid">
+        <!-- Petition Status Breakdown -->
+        <div class="chart-card">
+          <h2 class="chart-title">Petition Status Breakdown</h2>
+          <p class="chart-subtitle">Distribution of petitions by current status</p>
 
-    </div>
+          <div class="chart-display-area">
+            <div
+              class="donut-chart"
+              [style.background]="
+                'conic-gradient(#0066cc 0% ' +
+                petitionPercentages.active +
+                '%, #10b981 ' +
+                petitionPercentages.active +
+                '% ' +
+                (petitionPercentages.active + petitionPercentages.underReview) +
+                '%, #ef4444 ' +
+                (petitionPercentages.active + petitionPercentages.underReview) +
+                '% 100%)'
+              "
+            >
+              <div class="donut-hole"></div>
+            </div>
 
-  </section>
+            <!-- Slice Labels -->
+            <div class="donut-callouts">
+              <span class="callout callout-left"
+                >Active: {{ petitionPercentages.active }}%</span
+              >
+              <span class="callout callout-right"
+                >Closed: {{ petitionPercentages.closed }}%</span
+              >
+              <span class="callout callout-bottom"
+                >Under Review: {{ petitionPercentages.underReview }}%</span
+              >
+            </div>
+          </div>
 
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-dot blue"></span> Active</span>
+            <span class="legend-item"><span class="legend-dot green"></span> Under Review</span>
+            <span class="legend-item"><span class="legend-dot red"></span> Closed</span>
+          </div>
+        </div>
+
+        <!-- Poll Status Breakdown -->
+        <div class="chart-card">
+          <h2 class="chart-title">Poll Status Breakdown</h2>
+          <p class="chart-subtitle">Distribution of polls by current status</p>
+
+          <div class="chart-display-area">
+            <div
+              class="donut-chart"
+              [style.background]="
+                'conic-gradient(#0066cc 0% ' +
+                pollPercentages.active +
+                '%, #10b981 ' +
+                pollPercentages.active +
+                '% 100%)'
+              "
+            >
+              <div class="donut-hole"></div>
+            </div>
+          </div>
+
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-dot blue"></span> Active</span>
+            <span class="legend-item"><span class="legend-dot green"></span> Closed</span>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- My Activity Tab -->
+      @if (activeTab === 'activity') {
+      <div class="activity-card">
+        <h2 class="chart-title">Jurisdiction Engagement Activity</h2>
+        <p class="chart-subtitle">Direct actions submitted by your user account</p>
+        <div class="activity-metrics-list">
+          <div class="activity-item">
+            <span>Total Official Reviews / Responses:</span>
+            <strong>{{ reportData?.summary?.totalOfficialResponses || 0 }}</strong>
+          </div>
+          <div class="activity-item">
+            <span>Your Jurisdiction Locality:</span>
+            <strong>{{ user?.location?.city || 'San Diego' }}, {{ user?.location?.state || 'CA' }}</strong>
+          </div>
+          <div class="activity-item">
+            <span>Active Petitions in Locality:</span>
+            <strong>{{ reportData?.petitions?.byStatus?.active || 0 }}</strong>
+          </div>
+        </div>
+      </div>
+      }
+    </main>
+  </div>
 </div>
