@@ -1,5 +1,6 @@
 const Poll = require('../models/poll.model');
 const Vote = require('../models/vote.model');
+const Petition = require('../models/petition.model');
 
 class PollService {
   /**
@@ -13,7 +14,6 @@ class PollService {
         totalVotes > 0
           ? Number(((votesCount / totalVotes) * 100).toFixed(1))
           : 0;
-
       return {
         _id: option._id,
         text: option.text,
@@ -80,7 +80,7 @@ class PollService {
   }
 
   /**
-   * Find polls with search, filtering, and pagination
+   * Find polls with search, filtering, expiration routing, and pagination
    */
   async findAll(queryParams = {}) {
     const page = Math.max(1, parseInt(queryParams.page, 10) || 1);
@@ -88,13 +88,6 @@ class PollService {
     const skip = (page - 1) * limit;
 
     const filter = {};
-
-    // Default to active polls unless specifically queried
-    if (queryParams.status) {
-      filter.status = queryParams.status;
-    } else {
-      filter.status = 'active';
-    }
 
     // Category filter
     if (queryParams.category) {
@@ -109,9 +102,23 @@ class PollService {
       filter['location.state'] = new RegExp(queryParams.state.trim(), 'i');
     }
 
-    // Related petition filter
+    // Related petition filter (Milestone 4 feature)
     if (queryParams.relatedPetition) {
       filter.relatedPetition = queryParams.relatedPetition;
+    }
+
+    // Automatic expiration routing (Milestone 3 feature)
+    const now = new Date();
+    if (queryParams.status === 'closed') {
+      filter.$or = [
+        { status: 'closed' },
+        { endDate: { $lt: now, $ne: null } }
+      ];
+    } else {
+      filter.status = 'active';
+      filter.$and = [
+        { $or: [{ endDate: null }, { endDate: { $gt: now } }] }
+      ];
     }
 
     // Keyword search (searches title and description)
@@ -166,7 +173,6 @@ class PollService {
     if (queryParams.status) {
       filter.status = queryParams.status;
     }
-
     if (queryParams.category) {
       filter.category = queryParams.category;
     }
@@ -229,24 +235,17 @@ class PollService {
       throw error;
     }
 
-    // Check if poll is closed
-    if (poll.status === 'closed') {
-      const error = new Error('Cannot vote on a closed poll');
+    // Auto-close check during vote cast
+    if (poll.endDate && new Date(poll.endDate) < new Date()) {
+      poll.status = 'closed';
+      await poll.save();
+      const error = new Error('Poll has ended and is now closed');
       error.statusCode = 400;
       throw error;
     }
 
     if (poll.status !== 'active') {
       const error = new Error('Cannot vote on a poll that is not active');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    // Check if endDate has passed
-    if (poll.endDate && new Date(poll.endDate) < new Date()) {
-      poll.status = 'closed';
-      await poll.save();
-      const error = new Error('Poll has ended and is now closed');
       error.statusCode = 400;
       throw error;
     }

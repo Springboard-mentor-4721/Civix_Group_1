@@ -1,26 +1,69 @@
 <section class="home-grid">
   <div class="home-copy">
-    <p class="eyebrow">Civic participation, made visible</p>
-    <h1>Make your community count.</h1>
+    <p class="eyebrow">A SAFER, SMARTER, STRONGER COMMUNITY</p>
+    <h1>Together for a better tomorrow</h1>
     <p class="lede">Civix connects residents and public officials around the information that keeps neighborhoods moving.</p>
+
+    <div class="feature-row" aria-label="Civix community actions">
+      <div class="feature-item">
+        <span>Connect</span>
+        <small>with your community</small>
+      </div>
+      <div class="feature-item">
+        <span>Report</span>
+        <small>issues &amp; concerns</small>
+      </div>
+      <div class="feature-item">
+        <span>Track</span>
+        <small>progress &amp; updates</small>
+      </div>
+      <div class="feature-item">
+        <span>Build</span>
+        <small>better cities</small>
+      </div>
+    </div>
+
     @if (auth.currentUser(); as user) {
       <div class="welcome-note">
         <span class="status-dot"></span>
         Signed in as {{ user.name }} · {{ user.role }}
       </div>
-      <a class="button primary" routerLink="/profile">View your profile</a>
+      <div class="actions">
+        <a class="button primary" routerLink="/dashboard">Explore Civic Space</a>
+        <a class="button text-button" routerLink="/profile">View your profile</a>
+      </div>
     } @else {
       <div class="actions">
-        <a class="button primary" routerLink="/register">Join Civix</a>
+        <a class="button primary" routerLink="/dashboard">Explore Civic Space</a>
         <a class="button text-button" routerLink="/login">Sign in</a>
       </div>
     }
+
+    <div class="petition-callout" aria-label="Civic action callout">
+      <span>Your voice matters</span>
+      <p>Start a petition, raise a concern, and help shape a better city.</p>
+    </div>
   </div>
-  <aside class="home-panel">
-    <div class="panel-mark">01</div>
-    <h2>Milestone 1</h2>
-    <p>Your secure Civix identity is the starting point for civic participation.</p>
-    <div class="panel-rule"></div>
-    <span>Identity · Access · Trust</span>
+
+  <aside class="home-panel" aria-label="Civic illustration panel">
+    <div class="civic-scene" aria-hidden="true">
+      <img src="/assets/civix-civic-city-hero.svg" alt="" class="hero-art" />
+      <span class="float-tag tag-1">
+        <span class="tag-icon tag-green"></span>
+        Public Participation
+      </span>
+      <span class="float-tag tag-2">
+        <span class="tag-icon tag-orange"></span>
+        Safer Communities
+      </span>
+      <span class="float-tag tag-3">
+        <span class="tag-icon tag-green"></span>
+        Clean &amp; Green Environment
+      </span>
+      <span class="float-tag tag-4">
+        <span class="tag-icon tag-orange"></span>
+        Smarter Governance
+      </span>
+    </div>
   </aside>
 </section>

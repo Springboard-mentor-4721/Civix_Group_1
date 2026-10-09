@@ -1,1 +1,75 @@
-@if (auth.currentUser(); as user) {<section class="profile-page"><div class="profile-heading"><div><p class="eyebrow">Your Civix identity</p><h1>{{ user.name }}</h1><p class="role-line">{{ user.role === 'official' ? 'Public official' : 'Citizen' }} · {{ user.email }}</p></div><span class="badge">{{ user.verification.status }}</span></div><div class="profile-grid"><article><span class="label">Personal details</span><dl><div><dt>Name</dt><dd>{{ user.name }}</dd></div><div><dt>Email</dt><dd>{{ user.email }}</dd></div><div><dt>Account type</dt><dd>{{ user.role }}</dd></div></dl></article><article><span class="label">Location</span><dl><div><dt>Address</dt><dd>{{ user.location.address || 'Not provided' }}</dd></div><div><dt>City / State</dt><dd>{{ user.location.city || 'Not provided' }}{{ user.location.state ? ' / ' + user.location.state : '' }}</dd></div><div><dt>Pincode</dt><dd>{{ user.location.pincode || 'Not provided' }}</dd></div></dl></article></div><div class="role-note">@if (user.role === 'official') { <strong>Official view</strong><span>Your verified identity helps represent your public office clearly.</span> } @else { <strong>Citizen view</strong><span>Your voice starts with a trusted civic identity.</span> }</div></section>} @else {<p>Loading profile...</p>}
+@if (auth.currentUser(); as user) {
+  <section class="profile-page">
+    <div class="profile-hero">
+      <div class="profile-meta">
+        <div class="avatar-wrap">
+          <span class="avatar-letter">{{ user.name.charAt(0).toUpperCase() }}</span>
+        </div>
+
+        <div class="profile-copy">
+          <h1>{{ user.name }}</h1>
+          <div class="role-chip">{{ user.role === 'official' ? 'Official' : 'Citizen' }}</div>
+        </div>
+      </div>
+
+      <div class="profile-info-list">
+        <div class="info-item">
+          <span class="info-icon">✉</span>
+          <span>{{ user.email }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">⌖</span>
+          <span>{{ user.location.city || 'Location' }}{{ user.location.state ? ', ' + user.location.state : '' }}</span>
+        </div>
+      </div>
+
+      <button type="button" class="edit-button">✎ Edit Profile</button>
+    </div>
+
+    <div class="details-card">
+      <div class="details-header">
+        <h2>Personal Details</h2>
+        <p>Your basic information</p>
+      </div>
+
+      <div class="detail-grid">
+        <div class="field-group">
+          <label>Full name</label>
+          <div class="field-box">{{ user.name }}</div>
+        </div>
+        <div class="field-group">
+          <label>Email address</label>
+          <div class="field-box">{{ user.email }}</div>
+        </div>
+        <div class="field-group">
+          <label>Phone number</label>
+          <div class="field-box">{{ user.phone ?? 'Enter phone number' }}</div>
+        </div>
+        <div class="field-group">
+          <label>Account type</label>
+          <div class="field-box">{{ user.role === 'official' ? 'Official' : 'Citizen' }}</div>
+        </div>
+        <div class="field-group">
+          <label>City</label>
+          <div class="field-box">{{ user.location.city || 'Not provided' }}</div>
+        </div>
+        <div class="field-group">
+          <label>State</label>
+          <div class="field-box">{{ user.location.state || 'Not provided' }}</div>
+        </div>
+        <div class="field-group full-width">
+          <label>Address</label>
+          <div class="field-box">{{ user.location.address || 'Not provided' }}</div>
+        </div>
+        <div class="field-group">
+          <label>Pincode</label>
+          <div class="field-box">{{ user.location.pincode || 'Not provided' }}</div>
+        </div>
+      </div>
+
+      <button type="button" class="save-button">✓ Save Changes</button>
+    </div>
+  </section>
+} @else {
+  <p>Loading profile...</p>
+}

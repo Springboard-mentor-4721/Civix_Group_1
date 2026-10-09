@@ -332,6 +332,25 @@ describe('Civix Milestone 2: Petition Creation & Management API Tests', () => {
       expect(res.body.data.pagination.total).toBe(2);
     });
 
+    it('should include closed petitions by default when the user has no status filter', async () => {
+      await Petition.create({
+        title: 'My Closed Petition for Road Safety',
+        description: 'This petition was reviewed and closed after a successful official decision.',
+        category: 'Infrastructure',
+        location: { city: 'Bengaluru', state: 'Karnataka' },
+        creator: citizenUser._id,
+        status: 'closed'
+      });
+
+      const res = await request(app)
+        .get('/api/petitions/my')
+        .set('Authorization', `Bearer ${citizenToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.petitions.some((petition) => petition.status === 'closed')).toBe(true);
+      expect(res.body.data.petitions.length).toBe(3);
+    });
+
     it('should reject unauthenticated request to my petitions', async () => {
       const res = await request(app).get('/api/petitions/my');
 
@@ -538,6 +557,145 @@ describe('Civix Milestone 2: Petition Creation & Management API Tests', () => {
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.message).toContain('not active');
+    });
+  });
+
+  describe('Official Petition Status Updates (PATCH /api/petitions/:id/status)', () => {
+    let targetPetition;
+
+    beforeEach(async () => {
+      targetPetition = await Petition.create({
+        title: 'Official Review Petition for Road Lighting',
+        description: 'A neighborhood road lighting petition requires administrative review and a status decision.',
+        category: 'Infrastructure',
+        targetSignatures: 200,
+        signaturesCount: 0,
+        location: { city: 'Bengaluru', state: 'Karnataka' },
+        creator: citizenUser._id,
+        status: 'active'
+      });
+    });
+
+    it('should allow an official to move an active petition to under_review', async () => {
+      const res = await request(app)
+        .patch(`/api/petitions/${targetPetition._id}/status`)
+        .set('Authorization', `Bearer ${officialToken}`)
+        .send({ status: 'under_review' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.petition.status).toBe('under_review');
+    });
+
+    it('should reject a citizen request to change official petition status', async () => {
+      const res = await request(app)
+        .patch(`/api/petitions/${targetPetition._id}/status`)
+        .set('Authorization', `Bearer ${citizenToken}`)
+        .send({ status: 'under_review' });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('Requires one of the following roles');
+    });
+
+    it('should reject invalid status values for official update', async () => {
+      const res = await request(app)
+        .patch(`/api/petitions/${targetPetition._id}/status`)
+        .set('Authorization', `Bearer ${officialToken}`)
+        .send({ status: 'pending' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+  });
+
+  describe('Dashboard Statistics (GET /api/dashboard/stats)', () => {
+    it('should return citizen dashboard counts using authenticated user data', async () => {
+      await Petition.create([
+        {
+          title: 'Citizen petition in Bengaluru active',
+          description: 'Active petition to improve local lighting in the residential zone.',
+          category: 'Infrastructure',
+          location: { city: 'Bengaluru', state: 'Karnataka' },
+          creator: citizenUser._id,
+          status: 'active'
+        },
+        {
+          title: 'Citizen petition in Bengaluru under review',
+          description: 'A citizen petition waiting for official review and a decision.',
+          category: 'Infrastructure',
+          location: { city: 'Bengaluru', state: 'Karnataka' },
+          creator: citizenUser._id,
+          status: 'under_review'
+        },
+        {
+          title: 'Citizen petition in Mysuru closed',
+          description: 'A closed petition from another region should not count as successful.',
+          category: 'Environment',
+          location: { city: 'Mysuru', state: 'Karnataka' },
+          creator: citizenUser._id,
+          status: 'closed'
+        },
+        {
+          title: 'Other citizen petition in Bengaluru active',
+          description: 'Another petition from another user should not count toward this citizen profile.',
+          category: 'Environment',
+          location: { city: 'Bengaluru', state: 'Karnataka' },
+          creator: otherCitizenUser._id,
+          status: 'active'
+        }
+      ]);
+
+      const res = await request(app)
+        .get('/api/dashboard/stats')
+        .set('Authorization', `Bearer ${citizenToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.stats.myPetitions).toBe(3);
+      expect(res.body.data.stats.successfulPetitions).toBe(2);
+      expect(res.body.data.stats.pollsParticipated).toBe(0);
+      expect(res.body.data.stats.activePetitionsNearYou).toBe(2);
+    });
+
+    it('should return official dashboard counts using official review data', async () => {
+      await Petition.create([
+        {
+          title: 'Under review petition in Bengaluru',
+          description: 'This petition is pending official action in the official location.',
+          category: 'Infrastructure',
+          location: { city: 'Bengaluru', state: 'Karnataka' },
+          creator: citizenUser._id,
+          status: 'under_review'
+        },
+        {
+          title: 'Another under review petition elsewhere',
+          description: 'This petition is elsewhere and should not count for this department review.',
+          category: 'Environment',
+          location: { city: 'Mysuru', state: 'Karnataka' },
+          creator: citizenUser._id,
+          status: 'under_review'
+        },
+        {
+          title: 'Active petition in Bengaluru',
+          description: 'Active petition in the same location used for local review counts.',
+          category: 'Public Safety',
+          location: { city: 'Bengaluru', state: 'Karnataka' },
+          creator: citizenUser._id,
+          status: 'active'
+        }
+      ]);
+
+      const res = await request(app)
+        .get('/api/dashboard/stats')
+        .set('Authorization', `Bearer ${officialToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.stats.petitionsPendingReview).toBe(1);
+      expect(res.body.data.stats.resolvedGrievances).toBe(0);
+      expect(res.body.data.stats.activeMunicipalPolls).toBe(0);
+      expect(res.body.data.stats.incomingPetitionsForDepartmentReview).toBe(1);
     });
   });
 

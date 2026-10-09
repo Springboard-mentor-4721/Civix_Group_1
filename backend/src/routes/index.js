@@ -1,5 +1,10 @@
 const express = require('express');
 const authRoutes = require('./auth.routes');
+const dashboardRoutes = require('./dashboard.routes');
+const petitionRoutes = require('./petition.routes');
+const pollRoutes = require('./poll.routes');
+const officialRoutes = require('./official.routes'); // Moved to top
+const reportRoutes = require('./report.routes');     // Moved to top
 const { sendSuccess } = require('../utils/response');
 
 const router = express.Router();
@@ -15,20 +20,19 @@ router.get('/health', (req, res) => {
 // Authentication routes
 router.use('/auth', authRoutes);
 
+// Dashboard routes
+router.use('/dashboard', dashboardRoutes);
+
 // Petition routes
-const petitionRoutes = require('./petition.routes');
 router.use('/petitions', petitionRoutes);
 
 // Poll routes
-const pollRoutes = require('./poll.routes');
 router.use('/polls', pollRoutes);
 
 // Official routes
-const officialRoutes = require('./official.routes');
 router.use('/official', officialRoutes);
 
 // Report routes
-const reportRoutes = require('./report.routes');
 router.use('/reports', reportRoutes);
 
 module.exports = router;

@@ -67,6 +67,18 @@ class PetitionController {
   }
 
   /**
+   * Update petition status for officials only
+   */
+  async updatePetitionStatus(req, res, next) {
+    try {
+      const petition = await petitionService.updateStatus(req.params.id, req.body.status);
+      return sendSuccess(res, 200, 'Petition status updated successfully', { petition });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Delete a petition
    */
   async deletePetition(req, res, next) {

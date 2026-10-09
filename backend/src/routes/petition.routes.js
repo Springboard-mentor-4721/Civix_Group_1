@@ -24,7 +24,7 @@ router.get('/', petitionQueryValidator, validate, petitionController.getPetition
 router.get('/my', authenticate, petitionQueryValidator, validate, petitionController.getMyPetitions);
 router.post('/', authenticate, createPetitionValidator, validate, petitionController.createPetition);
 
-// Official sub-routes on petitions
+// Official sub-routes on petitions (Milestone 4)
 router.get('/:id/responses', petitionIdValidator, validate, officialController.getPetitionResponses);
 router.post(
   '/:id/response',

@@ -1,12 +1,11 @@
-# Civix Backend Service (Milestones 1, 2, 3 & 4)
+# Civix Backend Service (Milestones 1, 2 & 3)
 
-Civix is a Digital Civic Engagement & Petition Platform designed to empower citizens and government officials to engage transparently on civic issues, petitions, polling, sentiment tracking, official response workflows, and monthly civic engagement reporting.
+Civix is a Digital Civic Engagement & Petition Platform designed to empower citizens and government officials to engage transparently on civic issues, petitions, polling, sentiment tracking, and governance reporting.
 
 This service constitutes the **REST API Backend** for:
 - **Milestone 1:** User Roles & Verification (Authentication, JWT, Roles, Profile, Change Password)
 - **Milestone 2:** Petition Creation & Management (Create, View, Sign, Search, Filter, Pagination, Edit/Delete before signatures)
 - **Milestone 3:** Issue-Specific Polls, Public Voting & Live Sentiment Tracking (Poll Creation, Public Voting, Sentiment Results Dashboard, Status Management)
-- **Milestone 4:** Official Portal & Engagement Reporting (Locality-Aware Petition Dashboard, Official Responses, Status Updates, Monthly Reports, CSV Exports)
 
 ---
 
@@ -34,27 +33,22 @@ backend/
 │   ├── controllers/
 │   │   ├── auth.controller.js    # Auth HTTP controllers (register, login, me, change-password)
 │   │   ├── petition.controller.js# Petition HTTP controllers (CRUD, signing, search, filter)
-│   │   ├── poll.controller.js    # Poll HTTP controllers (CRUD, voting, results, status)
-│   │   ├── official.controller.js# Official portal controllers (locality dashboard, response, status)
-│   │   └── report.controller.js  # Reporting controllers (monthly engagement analytics, CSV export)
+│   │   └── poll.controller.js    # Poll HTTP controllers (CRUD, voting, results, status)
 │   ├── middleware/
 │   │   ├── auth.middleware.js    # JWT authentication middleware
 │   │   ├── role.middleware.js    # Role-based access control (citizen / official)
 │   │   ├── validate.middleware.js# Express-validator error handling middleware
 │   │   └── error.middleware.js   # Centralized error handler & 404 handler
 │   ├── models/
-│   │   ├── user.model.js         # Mongoose User model (authentication, role, jurisdiction)
+│   │   ├── user.model.js         # Mongoose User model (authentication & profile)
 │   │   ├── petition.model.js     # Mongoose Petition model
 │   │   ├── signature.model.js    # Mongoose Signature model (unique petition signing)
 │   │   ├── poll.model.js         # Mongoose Poll model (options, votesCount, totalVotes)
-│   │   ├── vote.model.js         # Mongoose Vote model (unique poll voting constraint)
-│   │   └── official-response.model.js # Mongoose OfficialResponse model (status history & comments)
+│   │   └── vote.model.js         # Mongoose Vote model (unique poll voting constraint)
 │   ├── routes/
 │   │   ├── auth.routes.js        # Auth endpoint definitions (/api/auth)
 │   │   ├── petition.routes.js    # Petition endpoint definitions (/api/petitions)
 │   │   ├── poll.routes.js        # Poll endpoint definitions (/api/polls)
-│   │   ├── official.routes.js    # Official portal definitions (/api/official)
-│   │   ├── report.routes.js      # Reporting definitions (/api/reports)
 │   │   └── index.js              # Central API router aggregator
 │   ├── services/
 │   │   ├── auth.service.js       # Authentication business logic & password handling
@@ -223,8 +217,6 @@ npm test
 - `search=potholes`
 - `page=1`
 - `limit=10`
-- `sortBy=createdAt`
-- `order=desc`
 
 **Response (`200 OK`):**
 ```json
@@ -232,7 +224,7 @@ npm test
   "success": true,
   "message": "Locality petitions retrieved successfully",
   "data": {
-    "petitions": [
+    "polls": [
       {
         "_id": "67be184b2e8a123456789abc",
         "title": "Fix Severe Potholes on MG Road Bengaluru",
@@ -245,7 +237,7 @@ npm test
           "state": "Karnataka",
           "address": "MG Road"
         },
-        "creator": {
+        "createdBy": {
           "_id": "67be0c5f2b84784a9e53b491",
           "name": "Citizen Jane",
           "role": "citizen"
