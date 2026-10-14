@@ -86,10 +86,10 @@
   </div>
 
   <!-- View Toggles & Filters -->
-  <div class="filter-card" style="flex-direction: column; gap: 15px;">
+  <div class="filter-card filter-card-container">
     
     <!-- Tab Section -->
-    <div style="display: flex; gap: 10px; width: 100%; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+    <div class="filter-tabs">
       <button class="small-btn" [style.background]="currentView === 'active' ? '#4f46e5' : '#e5e7eb'" [style.color]="currentView === 'active' ? 'white' : '#374151'" (click)="switchView('active')">
         Active Polls
       </button>
@@ -99,12 +99,12 @@
     </div>
 
     <!-- Search Section -->
-    <div style="display: flex; gap: 15px; width: 100%; align-items: center;">
-      <div class="search-box" style="flex: 1; margin: 0;">
+    <div class="filter-search-row">
+      <div class="search-box">
         <input type="text" [(ngModel)]="search" placeholder="Search {{ currentView }} polls..." (keyup.enter)="loadPolls()">
         <button (click)="loadPolls()">Search</button>
       </div>
-      <select [(ngModel)]="selectedCategory" (change)="loadPolls()">
+      <select class="filter-category-select" [(ngModel)]="selectedCategory" (change)="loadPolls()">
         <option value="">All Categories</option>
         <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
       </select>
@@ -126,7 +126,17 @@
     <div class="poll-card" *ngFor="let poll of polls">
       <div class="poll-header">
         <span class="category">{{ poll.category }}</span>
-        <span class="status" [class.closed]="currentView === 'closed'">{{ currentView === 'closed' ? 'closed' : 'active' }}</span>
+        <div class="header-actions">
+          <span class="status" [class.closed]="currentView === 'closed'">{{ currentView === 'closed' ? 'closed' : 'active' }}</span>
+          <button 
+            *ngIf="currentView === 'active' && canClosePoll(poll)"
+            type="button"
+            (click)="closePoll(poll)"
+            class="close-poll-btn"
+            title="Close this poll">
+            Close Poll
+          </button>
+        </div>
       </div>
       <h2>{{ poll.title }}</h2>
       <p class="description">{{ poll.description }}</p>

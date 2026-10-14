@@ -38,4 +38,34 @@ const authenticate = async (req, res, next) => {
   }
 };
 
+const optionalAuthenticate = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next();
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      return next();
+    }
+
+    try {
+      const decoded = verifyToken(token);
+      const user = await User.findById(decoded.id);
+      if (user) {
+        req.user = user;
+      }
+    } catch {
+      // Ignore token errors for optional authentication
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = authenticate;
+module.exports.authenticate = authenticate;
+module.exports.optionalAuthenticate = optionalAuthenticate;

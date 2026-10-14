@@ -168,4 +168,31 @@ export class PollsComponent implements OnInit {
       }
     });
   }
+
+  canClosePoll(poll: Poll): boolean {
+    const user = this.authService.currentUser();
+    if (!user) return false;
+    if (user.role === 'official') return true;
+    const creatorId = typeof poll.createdBy === 'object' ? poll.createdBy?._id : poll.createdBy;
+    return creatorId === user._id;
+  }
+
+  closePoll(poll: Poll): void {
+    if (!confirm(`Are you sure you want to close the poll "${poll.title}"?`)) return;
+
+    this.submitting = true;
+    this.pollService.updatePollStatus(poll._id, 'closed').subscribe({
+      next: () => {
+        this.successMessage = `Poll "${poll.title}" closed successfully.`;
+        this.loadPolls();
+      },
+      error: (err) => {
+        console.error('Failed to close poll:', err);
+        this.errorMessage = err?.error?.message || 'Failed to close poll.';
+      }
+    }).add(() => {
+      this.submitting = false;
+      this.cdr.detectChanges();
+    });
+  }
 }

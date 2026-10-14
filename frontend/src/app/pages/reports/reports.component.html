@@ -1,89 +1,6 @@
-<div class="spartan-dashboard-layout">
-  <div class="dashboard-grid">
-    <!-- LEFT SIDEBAR -->
-    <aside class="sidebar-column">
-      <!-- Profile Card -->
-      <div class="profile-card">
-        <div class="avatar-row">
-          <div class="avatar-circle" [class.official-avatar]="isOfficial">
-            {{ userInitial }}
-          </div>
-          <div class="name-col">
-            <span class="user-display-name">{{ user?.name || 'Sri' }}</span>
-            <span class="verification-tag">
-              <span class="status-dot verified"></span>
-              {{ isOfficial ? 'Official' : 'Unverified Official' }}
-            </span>
-          </div>
-        </div>
-        <div class="meta-row">
-          <span class="ui-icon">📍</span>
-          <span>
-            {{ user?.location?.city || 'San Diego' }},
-            {{ user?.location?.state || 'CA' }}
-          </span>
-        </div>
-        <div class="email-row">
-          <span>{{ user?.email || '2041020002.sridhartamarapalli@gmail.com' }}</span>
-        </div>
-      </div>
-
-      <!-- Navigation Links -->
-      <nav class="sidebar-nav">
-        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
-          <span class="ui-icon">🏠</span>
-          Dashboard
-        </a>
-        @if (isOfficial) {
-        <a routerLink="/petitions" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">📑</span>
-          Review Petitions
-        </a>
-        <a routerLink="/polls" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">🗳️</span>
-          Manage Polls
-        </a>
-        <a routerLink="/reports" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">📊</span>
-          Official Reports
-        </a>
-        } @else {
-        <a routerLink="/petitions" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">📄</span>
-          Petitions
-        </a>
-        <a routerLink="/polls" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">📊</span>
-          Polls
-        </a>
-        <a routerLink="/officials" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">👥</span>
-          Officials
-        </a>
-        <a routerLink="/reports" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">📈</span>
-          Reports
-        </a>
-        }
-        <a routerLink="/settings" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">⚙️</span>
-          Settings
-        </a>
-      </nav>
-
-      <!-- Sidebar Footer -->
-      <div class="sidebar-footer">
-        <button type="button" class="btn-logout" (click)="logout()">
-          <span class="ui-icon">🚪</span>
-          Log out
-        </button>
-      </div>
-    </aside>
-
-    <!-- RIGHT MAIN CONTENT -->
-    <main class="content-column">
-      <!-- Header with Export Button -->
-      <div class="reports-header-card">
+<div class="content-column">
+  <!-- Header with Export Button -->
+  <div class="reports-header-card">
         <div class="reports-title-area">
           <h1 class="welcome-title">Reports & Analytics</h1>
           <p class="welcome-sub">
@@ -210,20 +127,32 @@
             <div
               class="donut-chart"
               [style.background]="
-                'conic-gradient(#0066cc 0% ' +
-                pollPercentages.active +
-                '%, #10b981 ' +
-                pollPercentages.active +
-                '% 100%)'
+                pollPercentages.total === 0
+                  ? '#e2e8f0'
+                  : 'conic-gradient(#0066cc 0% ' +
+                    pollPercentages.active +
+                    '%, #10b981 ' +
+                    pollPercentages.active +
+                    '% 100%)'
               "
             >
               <div class="donut-hole"></div>
             </div>
+
+            <!-- Slice Labels -->
+            <div class="donut-callouts" *ngIf="pollPercentages.total > 0">
+              <span class="callout callout-left" *ngIf="pollPercentages.active > 0"
+                >Active: {{ pollPercentages.active }}%</span
+              >
+              <span class="callout callout-right" *ngIf="pollPercentages.closed > 0"
+                >Closed: {{ pollPercentages.closed }}%</span
+              >
+            </div>
           </div>
 
           <div class="chart-legend">
-            <span class="legend-item"><span class="legend-dot blue"></span> Active</span>
-            <span class="legend-item"><span class="legend-dot green"></span> Closed</span>
+            <span class="legend-item"><span class="legend-dot blue"></span> Active: {{ reportData?.polls?.byStatus?.active || 0 }} ({{ pollPercentages.active }}%)</span>
+            <span class="legend-item"><span class="legend-dot green"></span> Closed: {{ reportData?.polls?.byStatus?.closed || 0 }} ({{ pollPercentages.closed }}%)</span>
           </div>
         </div>
       </div>
@@ -250,6 +179,4 @@
         </div>
       </div>
       }
-    </main>
-  </div>
 </div>

@@ -81,17 +81,24 @@ class ReportService {
       createdAt: { $gte: startDate, $lte: endDate }
     });
 
-    // 3. Polls in period
+    // 3. Polls in period - auto close any expired polls first
+    await Poll.updateMany(
+      { status: 'active', endDate: { $ne: null, $lt: new Date() } },
+      { $set: { status: 'closed' } }
+    );
+
     const polls = await Poll.find(pollFilter).lean();
     const totalPolls = polls.length;
 
     const pollsByCategory = {};
     const pollsByStatus = { active: 0, closed: 0 };
+    const now = new Date();
 
     polls.forEach((p) => {
-      if (p.status) {
-        pollsByStatus[p.status] = (pollsByStatus[p.status] || 0) + 1;
-      }
+      const isClosed = p.status === 'closed' || (p.endDate && new Date(p.endDate) < now);
+      const effectiveStatus = isClosed ? 'closed' : 'active';
+      pollsByStatus[effectiveStatus] = (pollsByStatus[effectiveStatus] || 0) + 1;
+
       if (p.category) {
         pollsByCategory[p.category] = (pollsByCategory[p.category] || 0) + 1;
       }

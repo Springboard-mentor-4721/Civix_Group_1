@@ -18,7 +18,7 @@ const officialResponseSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Response comment is required'],
       trim: true,
-      minlength: [5, 'Response comment must be at least 5 characters long'],
+      minlength: [1, 'Response comment cannot be empty'],
       maxlength: [2000, 'Response comment cannot exceed 2000 characters']
     },
     previousStatus: {

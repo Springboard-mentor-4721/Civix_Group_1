@@ -94,6 +94,21 @@
         <h2>{{ petition.title }}</h2>
         <p class="description">{{ petition.description }}</p>
 
+        @if (petition.officialResponse?.comment) {
+          <div class="official-response-box">
+            <div class="response-header">
+              <span class="response-badge">🏛️ Official Response</span>
+              <span class="official-meta">
+                {{ petition.officialResponse?.officialName || 'Municipal Official' }}
+                @if (petition.officialResponse?.department) {
+                  • {{ petition.officialResponse?.department }}
+                }
+              </span>
+            </div>
+            <p class="response-comment">"{{ petition.officialResponse?.comment }}"</p>
+          </div>
+        }
+
         <!-- Progress with Dynamic Percentage -->
         <div class="progress-section">
           <div class="progress-info">
@@ -125,16 +140,6 @@
               Sign Petition
             }
           </button>
-
-          @if (isOwner(petition)) {
-            <button
-              class="delete-btn"
-              type="button"
-              [disabled]="deletingId === petition._id"
-              (click)="deletePetition(petition)">
-              {{ deletingId === petition._id ? '...' : 'Delete' }}
-            </button>
-          }
         </div>
 
         @if (isOfficialUser) {
@@ -171,8 +176,24 @@
     @if (!loading && filteredPetitions.length === 0) {
       <div class="empty-state">
         <div class="empty-icon">📋</div>
-        <h2>No Petitions Found</h2>
-        <p>No petitions match your current filters. Try changing your search or filters.</p>
+        <h2>
+          @if (activeTab === 'signed') {
+            No Signed Petitions
+          } @else if (activeTab === 'my') {
+            No Created Petitions
+          } @else {
+            No Petitions Found
+          }
+        </h2>
+        <p>
+          @if (activeTab === 'signed') {
+            You haven't signed any petitions yet. Switch to "All Petitions" to discover and support civic causes!
+          } @else if (activeTab === 'my') {
+            You haven't created any petitions yet. Click "+ Create Petition" to launch one for your community.
+          } @else {
+            No petitions match your current filters. Try changing your search or filters.
+          }
+        </p>
         <button class="clear-btn" type="button" (click)="clearFilters()">
           Clear Filters
         </button>

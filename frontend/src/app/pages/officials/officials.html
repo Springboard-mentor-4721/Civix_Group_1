@@ -93,44 +93,54 @@
     <button
       class="clear-btn"
       (click)="clearFilters()">
-
       Clear Filters
+    </button>
 
+    <button
+      class="refresh-btn"
+      (click)="loadOfficials()"
+      title="Reload official directory">
+      🔄 Refresh
     </button>
 
   </section>
 
+  @if (errorMessage) {
+    <div class="api-notice">
+      <span>⚠️ {{ errorMessage }}</span>
+      <button class="retry-btn" (click)="loadOfficials()">Retry</button>
+    </div>
+  }
 
-  <!-- RESULT COUNT -->
-  <div class="results-header">
+  @if (loading) {
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Loading registered officials...</p>
+    </div>
+  } @else {
+    <!-- RESULT COUNT -->
+    <div class="results-header">
+      <span>
+        Showing
+        <strong>
+          {{ filteredOfficials.length }}
+        </strong>
+        officials
+      </span>
+    </div>
 
-    <span>
-      Showing
-      <strong>
-        {{ filteredOfficials.length }}
-      </strong>
-      officials
-    </span>
-
-  </div>
-
-
-  <!-- OFFICIAL CARDS -->
-  <section class="official-grid">
-
-    @for (
-      official of filteredOfficials;
-      track official.email
-    ) {
-
-      <article class="official-card">
-
-        <!-- CARD HEADER -->
-        <div class="official-header">
-
-          <div class="official-avatar">
-            {{ official.initials }}
-          </div>
+    <!-- OFFICIAL CARDS -->
+    <section class="official-grid">
+      @for (
+        official of filteredOfficials;
+        track official._id || official.email
+      ) {
+        <article class="official-card">
+          <!-- CARD HEADER -->
+          <div class="official-header">
+            <div class="official-avatar">
+              {{ official.initials }}
+            </div>
 
 
           <div class="official-info">
@@ -277,5 +287,6 @@
     }
 
   </section>
+}
 
 </div>

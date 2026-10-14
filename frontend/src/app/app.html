@@ -1,25 +1,49 @@
 <header class="site-header">
-  <a class="brand" routerLink="/">
+  <a class="brand" routerLink="/" (click)="closeMenu()">
     <span class="brand-symbol">C</span>
     <span>Civix</span>
   </a>
 
-  <nav aria-label="Main navigation">
+  <button 
+    class="mobile-menu-toggle" 
+    type="button" 
+    [attr.aria-expanded]="menuOpen" 
+    aria-label="Toggle navigation"
+    (click)="toggleMenu()">
+    <span class="hamburger-icon" [class.open]="menuOpen">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+  </button>
+
+  <nav [class.open]="menuOpen" aria-label="Main navigation">
     @if (auth.currentUser(); as user) {
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-      <a routerLink="/profile" routerLinkActive="active">Profile</a>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Home</a>
+      <a routerLink="/dashboard" routerLinkActive="active" (click)="closeMenu()">Dashboard</a>
+      <a routerLink="/profile" routerLinkActive="active" (click)="closeMenu()">Profile</a>
       <span class="role-nav">{{ user.role === 'official' ? 'Official space' : 'Citizen space' }}</span>
-      <button class="logout-button" type="button" (click)="logout()">Log out</button>
+      <button class="logout-button" type="button" (click)="logoutAndClose()">Log out</button>
     } @else {
-      <a routerLink="/login" routerLinkActive="active">Sign in</a>
-      <a class="nav-join" routerLink="/register">Join Civix</a>
+      <a routerLink="/login" routerLinkActive="active" (click)="closeMenu()">Sign in</a>
+      <a class="nav-join" routerLink="/register" (click)="closeMenu()">Join Civix</a>
     }
   </nav>
 </header>
 
-<main class="site-main">
-  <router-outlet />
+<main class="site-main" [class.has-sidebar]="showSidebar()">
+  @if (showSidebar()) {
+    <div class="common-shell-wrapper">
+      <div class="common-shell-grid">
+        <app-sidebar class="common-shell-sidebar" />
+        <div class="common-shell-main">
+          <router-outlet />
+        </div>
+      </div>
+    </div>
+  } @else {
+    <router-outlet />
+  }
 </main>
 
 <footer class="site-footer">

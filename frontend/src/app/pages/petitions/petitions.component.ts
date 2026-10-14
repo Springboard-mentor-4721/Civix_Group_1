@@ -24,6 +24,13 @@ export interface Petition {
   createdDate?: string;
   createdAt?: string;
   hasSigned?: boolean;
+  officialResponse?: {
+    comment?: string;
+    officialName?: string;
+    department?: string;
+    status?: string;
+    updatedAt?: string;
+  };
 }
 
 @Component({
@@ -47,7 +54,6 @@ export class Petitions implements OnInit {
 
   loading = false;
   signingId: string | null = null;
-  deletingId: string | null = null;
   currentUserId: string | null = null;
 
   currentPage = 1;
@@ -240,9 +246,11 @@ export class Petitions implements OnInit {
 
     const endpoint = this.activeTab === 'my'
       ? `${this.apiUrl}/my`
+      : this.activeTab === 'signed'
+      ? `${this.apiUrl}/signed`
       : this.apiUrl;
 
-    if (this.activeTab === 'my' && this.selectedStatus === 'All') {
+    if ((this.activeTab === 'my' || this.activeTab === 'signed') && this.selectedStatus === 'All') {
       params = params.delete('status');
     }
 
@@ -274,10 +282,13 @@ export class Petitions implements OnInit {
 
             return {
               ...item,
+              creator: item.creator || item.createdBy,
+              createdBy: item.creator || item.createdBy,
               signatures: currentSignatures,
               goal: targetGoal,
-              hasSigned: Boolean(item.hasSigned),
+              hasSigned: this.activeTab === 'signed' ? true : Boolean(item.hasSigned),
               status: this.getStatusLabel(item.status),
+              officialResponse: item.officialResponse,
               createdDate: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', {
                 day: 'numeric',
                 month: 'short',
@@ -300,9 +311,6 @@ export class Petitions implements OnInit {
   }
 
   get filteredPetitions(): Petition[] {
-    if (this.activeTab === 'signed') {
-      return this.petitions.filter(p => p.hasSigned);
-    }
     return this.petitions;
   }
 
@@ -362,8 +370,10 @@ export class Petitions implements OnInit {
   }
 
   isOwner(petition: Petition): boolean {
-    if (!this.currentUserId || !petition.createdBy) return false;
-    const creatorId = typeof petition.createdBy === 'object' ? petition.createdBy._id : petition.createdBy;
+    if (!this.currentUserId) return false;
+    const creatorObj = (petition as any).creator || petition.createdBy;
+    if (!creatorObj) return false;
+    const creatorId = typeof creatorObj === 'object' ? (creatorObj._id || creatorObj.id) : creatorObj;
     return String(creatorId) === String(this.currentUserId);
   }
 
@@ -383,45 +393,26 @@ export class Petitions implements OnInit {
       })
     )
     .subscribe({
-      next: () => {
+      next: (res) => {
         petition.hasSigned = true;
-        petition.signatures = (petition.signatures || 0) + 1;
+        petition.signatures = res?.data?.signaturesCount ?? ((petition.signatures || 0) + 1);
+        this.statusMessage = 'Petition signed successfully!';
+        setTimeout(() => {
+          this.statusMessage = null;
+          this.cdr.detectChanges();
+        }, 3000);
         this.cdr.detectChanges();
       },
       error: (err) => {
         const msg = err?.error?.message || 'Failed to sign petition.';
         if (msg.toLowerCase().includes('already signed')) {
           petition.hasSigned = true;
-          if (!petition.signatures || petition.signatures === 0) {
-            petition.signatures = 1;
-          }
         }
-        alert(msg);
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  deletePetition(petition: Petition): void {
-    if (!petition._id || !confirm('Are you sure you want to delete this petition?')) return;
-    this.deletingId = petition._id;
-
-    this.http.delete<any>(
-      `${this.apiUrl}/${petition._id}`,
-      { headers: this.getAuthHeaders() }
-    )
-    .pipe(
-      finalize(() => {
-        this.deletingId = null;
-        this.cdr.detectChanges();
-      })
-    )
-    .subscribe({
-      next: () => {
-        this.fetchPetitions(this.currentPage);
-      },
-      error: (err) => {
-        alert(err?.error?.message || 'Failed to delete petition.');
+        this.statusError = msg;
+        setTimeout(() => {
+          this.statusError = null;
+          this.cdr.detectChanges();
+        }, 3500);
         this.cdr.detectChanges();
       }
     });

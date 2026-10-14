@@ -57,6 +57,18 @@ class OfficialController {
       next(error);
     }
   }
+
+  /**
+   * Get all registered officials
+   */
+  async getRegisteredOfficials(req, res, next) {
+    try {
+      const result = await officialService.getRegisteredOfficials(req.query);
+      return sendSuccess(res, 200, 'Registered officials retrieved successfully', result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new OfficialController();

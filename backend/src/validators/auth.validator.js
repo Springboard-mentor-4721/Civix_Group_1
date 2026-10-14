@@ -27,6 +27,16 @@ const registerValidator = [
     .isIn(['citizen', 'official'])
     .withMessage('Role must be either citizen or official'),
 
+  body('department')
+    .optional()
+    .isString()
+    .trim(),
+
+  body('phone')
+    .optional()
+    .isString()
+    .trim(),
+
   body('location')
     .optional()
     .isObject()

@@ -22,8 +22,6 @@
           <span>{{ user.location.city || 'Location' }}{{ user.location.state ? ', ' + user.location.state : '' }}</span>
         </div>
       </div>
-
-      <button type="button" class="edit-button">✎ Edit Profile</button>
     </div>
 
     <div class="details-card">
@@ -66,8 +64,6 @@
           <div class="field-box">{{ user.location.pincode || 'Not provided' }}</div>
         </div>
       </div>
-
-      <button type="button" class="save-button">✓ Save Changes</button>
     </div>
   </section>
 } @else {

@@ -1,93 +1,6 @@
-<div class="spartan-dashboard-layout">
-  <div class="dashboard-grid">
-    <!-- LEFT SIDEBAR -->
-    <aside class="sidebar-column">
-      <!-- User Profile Card -->
-      <div class="profile-card">
-        <div class="avatar-row">
-          <div class="avatar-circle" [class.official-avatar]="isOfficial">
-            {{ userInitial }}
-          </div>
-          <div class="name-col">
-            <span class="user-display-name">
-              {{ user?.name || 'Sri' }}
-            </span>
-            <span class="verification-tag">
-              <span class="status-dot verified"></span>
-              {{ isOfficial ? 'Official' : 'Citizen' }}
-            </span>
-          </div>
-        </div>
-        <div class="meta-row">
-          <span class="ui-icon">📍</span>
-          <span>
-            {{ user?.location?.city || 'San Diego' }},
-            {{ user?.location?.state || 'CA' }}
-          </span>
-        </div>
-        <div class="email-row">
-          <span>
-            {{ user?.email || 'user@civix.org' }}
-          </span>
-        </div>
-      </div>
-
-      <!-- NAVIGATION LINKS -->
-      <nav class="sidebar-nav">
-        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
-          <span class="ui-icon">🏠</span>
-          Dashboard
-        </a>
-        @if (isOfficial) {
-        <a routerLink="/petitions" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">📑</span>
-          Review Petitions
-        </a>
-        <a routerLink="/polls" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">🗳️</span>
-          Manage Polls
-        </a>
-        <a routerLink="/reports" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">📊</span>
-          Official Reports
-        </a>
-        } @else {
-        <a routerLink="/petitions" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">📄</span>
-          Petitions
-        </a>
-        <a routerLink="/polls" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">📊</span>
-          Polls
-        </a>
-        <a routerLink="/officials" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">👥</span>
-          Officials
-        </a>
-        <a routerLink="/reports" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">📈</span>
-          Reports
-        </a>
-        }
-        <a routerLink="/settings" routerLinkActive="active" class="nav-item">
-          <span class="ui-icon">⚙️</span>
-          Settings
-        </a>
-      </nav>
-
-      <!-- BOTTOM ACTIONS -->
-      <div class="sidebar-footer">
-        <button type="button" class="btn-logout" (click)="logout()">
-          <span class="ui-icon">🚪</span>
-          Log out
-        </button>
-      </div>
-    </aside>
-
-    <!-- RIGHT MAIN CONTENT -->
-    <main class="content-column">
-      <!-- WELCOME HEADER -->
-      <div class="welcome-card">
+<div class="content-column">
+  <!-- WELCOME HEADER -->
+  <div class="welcome-card">
         <div class="welcome-header-content">
           <div>
             <span class="role-portal-badge">
@@ -100,17 +13,13 @@
               {{ isOfficial ? 'Review citizen initiatives, update grievance statuses, and manage department polls.' : "See what's happening in your community and make your voice heard." }}
             </p>
           </div>
+          @if (!isOfficial) {
           <div class="header-action-btn-wrapper">
-            @if (isOfficial) {
-            <button class="primary-action-btn" routerLink="/polls">
-              + Create Municipal Poll
-            </button>
-            } @else {
             <button class="primary-action-btn" routerLink="/petitions">
               + Start a Petition
             </button>
-            }
           </div>
+          }
         </div>
       </div>
 
@@ -177,11 +86,9 @@
           </h2>
           <div class="location-filter">
             <span class="showing-label">Showing for:</span>
-            <button class="location-dropdown-btn">
+            <button class="location-dropdown-btn" type="button">
               <span class="ui-icon">📍</span>
-              {{ user?.location?.city || 'San Diego' }},
-              {{ user?.location?.state || 'CA' }}
-              ▾
+              {{ displayLocation }}
             </button>
           </div>
         </div>
@@ -206,6 +113,22 @@
                 <span class="status-pill" [ngClass]="petition.status">{{ petition.status }}</span>
               </div>
               <p class="feed-item-desc">{{ petition.description }}</p>
+
+              @if (petition.officialResponse?.comment) {
+              <div class="official-response-box">
+                <div class="response-header">
+                  <span class="response-badge">🏛️ Official Response</span>
+                  <span class="official-meta">
+                    {{ petition.officialResponse?.officialName || 'Municipal Official' }}
+                    @if (petition.officialResponse?.department) {
+                      • {{ petition.officialResponse?.department }}
+                    }
+                  </span>
+                </div>
+                <p class="response-comment">"{{ petition.officialResponse?.comment }}"</p>
+              </div>
+              }
+
               <div class="feed-item-metadata">
                 <span>📍 {{ petition.location?.city || 'Local' }}, {{ petition.location?.state }}</span>
                 <span>✍️ {{ petition.signaturesCount || 0 }} signatures</span>
@@ -233,8 +156,6 @@
         </div>
         }
       </section>
-    </main>
-  </div>
 
   <!-- OFFICIAL RESPONSE MODAL -->
   @if (selectedPetitionForResponse) {
@@ -257,6 +178,12 @@
           <option value="active">Keep Active</option>
         </select>
       </div>
+
+      @if (modalError) {
+        <div class="modal-error-banner" style="background: #fee2e2; color: #dc2626; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px;">
+          {{ modalError }}
+        </div>
+      }
 
       <div class="form-field">
         <label>Official Comment & Action Plan</label>

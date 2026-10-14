@@ -2,9 +2,11 @@
    BASE LAYOUT
 ============================== */
 .poll-page {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .page-header {
@@ -12,12 +14,14 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 25px;
+  gap: 16px;
 }
 
 .page-header h1 {
   margin: 0 0 5px 0;
   color: #1f2937;
-  font-size: 2rem;
+  font-size: clamp(1.6rem, 4vw, 2rem);
+  overflow-wrap: break-word;
 }
 
 .page-header p {
@@ -188,6 +192,35 @@ button {
   cursor: pointer;
 }
 
+.filter-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 15px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filter-tabs .small-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.filter-search-row {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+  align-items: center;
+}
+
+.filter-category-select,
 .filter-card select {
   padding: 10px;
   border: 1px solid #d1d5db;
@@ -221,6 +254,30 @@ button {
   color: #16a34a;
 }
 .status.closed { color: #dc2626; }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-poll-btn {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-poll-btn:hover {
+  background-color: #fecaca;
+  color: #991b1b;
+  border-color: #f87171;
+}
 
 .poll-card h2 {
   margin: 0 0 10px 0;
@@ -379,4 +436,108 @@ button {
   padding: 20px;
   color: #6b7280;
   font-weight: 500;
+}
+
+/* ==============================
+   RESPONSIVE DESIGN
+============================== */
+@media (max-width: 650px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .add-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .filter-search-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .filter-category-select,
+  .filter-card select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .form-actions button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .poll-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .poll-option {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .poll-option button {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+  }
+
+  .poll-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .option-info {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .filter-card, .poll-card, .add-poll-card {
+    padding: 18px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .poll-page {
+    padding: 14px 10px;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .section-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .filter-tabs {
+    gap: 6px;
+  }
+
+  .small-btn {
+    padding: 7px 12px;
+    font-size: 0.8rem;
+  }
 }

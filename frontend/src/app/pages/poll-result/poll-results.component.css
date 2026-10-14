@@ -3,7 +3,7 @@
   margin-top: 20px;
   margin-bottom: 25px;
   background: #f9fafb;
-  padding: 20px;
+  padding: clamp(12px, 3vw, 20px);
   border-radius: 10px;
   border: 1px solid #e5e7eb;
 }
@@ -20,6 +20,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
   margin-bottom: 8px;
   font-size: 1rem;
 }

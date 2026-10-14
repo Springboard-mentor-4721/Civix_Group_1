@@ -80,9 +80,31 @@ class PollService {
   }
 
   /**
+   * Automatically close polls whose endDate has passed
+   */
+  async autoCloseExpiredPolls() {
+    try {
+      const now = new Date();
+      await Poll.updateMany(
+        {
+          status: 'active',
+          endDate: { $ne: null, $lt: now }
+        },
+        {
+          $set: { status: 'closed' }
+        }
+      );
+    } catch (err) {
+      console.error('Error auto-closing expired polls:', err);
+    }
+  }
+
+  /**
    * Find polls with search, filtering, expiration routing, and pagination
    */
   async findAll(queryParams = {}) {
+    await this.autoCloseExpiredPolls();
+
     const page = Math.max(1, parseInt(queryParams.page, 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(queryParams.limit, 10) || 10));
     const skip = (page - 1) * limit;
@@ -164,6 +186,8 @@ class PollService {
    * Find polls created by a specific user
    */
   async findByUser(userId, queryParams = {}) {
+    await this.autoCloseExpiredPolls();
+
     const page = Math.max(1, parseInt(queryParams.page, 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(queryParams.limit, 10) || 10));
     const skip = (page - 1) * limit;
@@ -218,6 +242,11 @@ class PollService {
       const error = new Error('Poll not found');
       error.statusCode = 404;
       throw error;
+    }
+
+    if (poll.status === 'active' && poll.endDate && new Date(poll.endDate) < new Date()) {
+      poll.status = 'closed';
+      await poll.save();
     }
 
     return poll;
@@ -327,6 +356,11 @@ class PollService {
       const error = new Error('Poll not found');
       error.statusCode = 404;
       throw error;
+    }
+
+    if (poll.status === 'active' && poll.endDate && new Date(poll.endDate) < new Date()) {
+      poll.status = 'closed';
+      await poll.save();
     }
 
     return this.formatResults(poll);

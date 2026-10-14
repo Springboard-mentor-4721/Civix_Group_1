@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { DashboardStats, User } from '../../models/api.models';
@@ -9,7 +9,7 @@ import { DashboardStats, User } from '../../models/api.models';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -46,6 +46,7 @@ export class DashboardComponent implements OnInit {
     comment: ''
   };
   submittingResponse: boolean = false;
+  modalError: string = '';
 
   constructor(
     public authService: AuthService,
@@ -153,6 +154,15 @@ export class DashboardComponent implements OnInit {
     return this.user?.name ? this.user.name.charAt(0).toUpperCase() : 'U';
   }
 
+  get displayLocation(): string {
+    const city = (this.user?.location?.city || '').trim();
+    const state = (this.user?.location?.state || '').trim();
+    if (city && state) return `${city}, ${state}`;
+    if (city) return city;
+    if (state) return state;
+    return 'All Jurisdictions';
+  }
+
   setCategory(cat: string): void {
     this.selectedCategory = cat;
     this.fetchFeed();
@@ -164,6 +174,7 @@ export class DashboardComponent implements OnInit {
   }
 
   openResponseModal(petition: any): void {
+    this.modalError = '';
     this.selectedPetitionForResponse = petition;
     this.responsePayload = {
       status: petition.status === 'active' ? 'under_review' : petition.status,
@@ -173,14 +184,24 @@ export class DashboardComponent implements OnInit {
 
   closeResponseModal(): void {
     this.selectedPetitionForResponse = null;
+    this.modalError = '';
   }
 
   submitOfficialAction(): void {
-    if (!this.selectedPetitionForResponse || !this.responsePayload.comment.trim()) return;
+    if (!this.selectedPetitionForResponse) return;
+    const comment = this.responsePayload.comment.trim();
+    if (!comment) {
+      this.modalError = 'Official comment cannot be empty.';
+      return;
+    }
 
+    this.modalError = '';
     this.submittingResponse = true;
     this.dashboardService
-      .respondToPetition(this.selectedPetitionForResponse._id, this.responsePayload)
+      .respondToPetition(this.selectedPetitionForResponse._id, {
+        comment,
+        status: this.responsePayload.status
+      })
       .subscribe({
         next: () => {
           this.selectedPetitionForResponse.status = this.responsePayload.status;
@@ -192,6 +213,7 @@ export class DashboardComponent implements OnInit {
         },
         error: (err) => {
           console.error('Failed to submit official response:', err);
+          this.modalError = err?.error?.message || 'Failed to submit official response.';
           this.submittingResponse = false;
           this.cdr.detectChanges();
         }

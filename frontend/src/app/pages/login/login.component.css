@@ -13,10 +13,12 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 485px);
-  gap: clamp(2rem, 5vw, 5.6rem);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 485px);
+  gap: clamp(1.5rem, 4vw, 5.6rem);
   align-items: center;
   min-height: 670px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .auth-intro {
@@ -34,10 +36,12 @@
 
 .auth-intro h1 {
   margin: 1.2rem 0 1.1rem;
-  font-size: clamp(3.6rem, 5vw, 6rem);
-  line-height: 0.9;
-  letter-spacing: -0.08em;
+  font-size: clamp(2.4rem, 5vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
   font-weight: 500;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .intro-text {
@@ -306,6 +310,10 @@ small {
 }
 
 @media (max-width: 900px) {
+  :host {
+    min-height: auto;
+  }
+
   .auth-layout {
     grid-template-columns: 1fr;
     gap: 2rem;
@@ -315,6 +323,15 @@ small {
   .auth-intro {
     max-width: 100%;
   }
+
+  .form-shell {
+    width: 100%;
+  }
+
+  .form-panel {
+    max-width: 520px;
+    margin: 0 auto;
+  }
 }
 
 @media (max-width: 560px) {
@@ -323,11 +340,38 @@ small {
   }
 
   .auth-intro h1 {
-    font-size: clamp(3rem, 17vw, 4.4rem);
+    font-size: clamp(2rem, 8vw, 3rem);
+    line-height: 1.05;
+    letter-spacing: -0.05em;
+  }
+
+  .form-panel {
+    padding: 1.4rem 1.1rem;
+    border-radius: 0.85rem;
+  }
+
+  .form-heading h2 {
+    font-size: clamp(2rem, 7vw, 2.6rem);
+  }
+
+  .feature-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 2.5rem;
+  }
+
+  .feature-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
   }
 
   .info-block {
-    align-items: center;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+
+  .info-copy h3 {
+    font-size: 1.1rem;
   }
 }
 

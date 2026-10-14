@@ -87,4 +87,8 @@ export class PollService {
   getPollResults(id: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}/results`);
   }
+
+  updatePollStatus(id: string, status: 'active' | 'closed'): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/${id}/status`, { status });
+  }
 }

@@ -48,4 +48,8 @@ router.get(
   officialController.getPetitionResponses
 );
 
+// Get All Registered Officials
+router.get('/', officialController.getRegisteredOfficials);
+router.get('/list', officialController.getRegisteredOfficials);
+
 module.exports = router;

@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { User } from '../../models/api.models';
@@ -8,7 +8,7 @@ import { User } from '../../models/api.models';
 @Component({
   selector: 'app-report',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule],
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.css']
 })
@@ -89,10 +89,11 @@ export class ReportComponent implements OnInit {
     const closed = byStatus?.closed ?? 0;
     const total = active + closed;
 
-    if (total === 0) return { active: 100, closed: 0 };
+    if (total === 0) return { active: 0, closed: 0, total: 0 };
     return {
       active: Math.round((active / total) * 100),
-      closed: Math.round((closed / total) * 100)
+      closed: Math.round((closed / total) * 100),
+      total
     };
   }
 

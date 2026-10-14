@@ -20,7 +20,7 @@ class PetitionService {
     return await petition.populate('creator', 'name email role location');
   }
 
-  async findAll(queryParams = {}) {
+  async findAll(queryParams = {}, userId = null) {
     const page = Math.max(1, parseInt(queryParams.page, 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(queryParams.limit, 10) || 10));
     const skip = (page - 1) * limit;
@@ -50,10 +50,28 @@ class PetitionService {
       Petition.countDocuments(filter)
     ]);
 
+    let signedPetitionIds = new Set();
+    if (userId && petitions.length > 0) {
+      const petitionIds = petitions.map((p) => p._id);
+      const userSignatures = await Signature.find({
+        user: userId,
+        petition: { $in: petitionIds }
+      }).select('petition');
+      signedPetitionIds = new Set(userSignatures.map((s) => s.petition.toString()));
+    }
+
+    const petitionsWithSigned = petitions.map((p) => {
+      const doc = p.toObject ? p.toObject() : p;
+      return {
+        ...doc,
+        hasSigned: userId ? signedPetitionIds.has(p._id.toString()) : false
+      };
+    });
+
     const totalPages = Math.ceil(total / limit) || 1;
 
     return {
-      petitions,
+      petitions: petitionsWithSigned,
       pagination: { total, page, limit, totalPages, hasNextPage: page < totalPages, hasPrevPage: page > 1 }
     };
   }
@@ -76,22 +94,117 @@ class PetitionService {
       Petition.countDocuments(filter)
     ]);
 
+    let signedPetitionIds = new Set();
+    if (userId && petitions.length > 0) {
+      const petitionIds = petitions.map((p) => p._id);
+      const userSignatures = await Signature.find({
+        user: userId,
+        petition: { $in: petitionIds }
+      }).select('petition');
+      signedPetitionIds = new Set(userSignatures.map((s) => s.petition.toString()));
+    }
+
+    const petitionsWithSigned = petitions.map((p) => {
+      const doc = p.toObject ? p.toObject() : p;
+      return {
+        ...doc,
+        hasSigned: signedPetitionIds.has(p._id.toString())
+      };
+    });
+
     const totalPages = Math.ceil(total / limit) || 1;
 
     return {
-      petitions,
+      petitions: petitionsWithSigned,
       pagination: { total, page, limit, totalPages, hasNextPage: page < totalPages, hasPrevPage: page > 1 }
     };
   }
 
-  async findById(petitionId) {
+  async findSignedByUser(userId, queryParams = {}) {
+    const page = Math.max(1, parseInt(queryParams.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(queryParams.limit, 10) || 10));
+    const skip = (page - 1) * limit;
+
+    const signatures = await Signature.find({ user: userId }).select('petition');
+    const petitionIds = signatures.map((s) => s.petition);
+
+    if (petitionIds.length === 0) {
+      return {
+        petitions: [],
+        pagination: { total: 0, page, limit, totalPages: 1, hasNextPage: false, hasPrevPage: false }
+      };
+    }
+
+    const filter = { _id: { $in: petitionIds } };
+    if (queryParams.status && queryParams.status !== 'All') {
+      filter.status = queryParams.status;
+    }
+    if (queryParams.category && queryParams.category !== 'All Categories') {
+      filter.category = queryParams.category;
+    }
+    if (queryParams.city) {
+      filter['location.city'] = new RegExp(queryParams.city.trim(), 'i');
+    }
+    if (queryParams.state && queryParams.state !== 'All Locations') {
+      filter['location.state'] = new RegExp(queryParams.state.trim(), 'i');
+    }
+    if (queryParams.tag) {
+      filter.tags = queryParams.tag.trim().toLowerCase();
+    }
+
+    if (queryParams.search && queryParams.search.trim()) {
+      const searchRegex = new RegExp(queryParams.search.trim(), 'i');
+      filter.$or = [
+        { title: searchRegex },
+        { description: searchRegex },
+        { tags: { $in: [searchRegex] } }
+      ];
+    }
+
+    const sortBy = queryParams.sortBy || 'createdAt';
+    const order = queryParams.order === 'asc' ? 1 : -1;
+    const sort = { [sortBy]: order };
+
+    const [petitions, total] = await Promise.all([
+      Petition.find(filter).sort(sort).skip(skip).limit(limit).populate('creator', 'name email role location'),
+      Petition.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    const petitionsWithSigned = petitions.map((p) => {
+      const doc = p.toObject ? p.toObject() : p;
+      return {
+        ...doc,
+        hasSigned: true
+      };
+    });
+
+    return {
+      petitions: petitionsWithSigned,
+      pagination: { total, page, limit, totalPages, hasNextPage: page < totalPages, hasPrevPage: page > 1 }
+    };
+  }
+
+  async findById(petitionId, userId = null) {
     const petition = await Petition.findById(petitionId).populate('creator', 'name email role location');
     if (!petition) {
       const error = new Error('Petition not found');
       error.statusCode = 404;
       throw error;
     }
-    return petition;
+
+    let hasSigned = false;
+    if (userId) {
+      const signature = await Signature.findOne({ petition: petitionId, user: userId });
+      hasSigned = Boolean(signature);
+    }
+
+    const doc = petition.toObject ? petition.toObject() : petition;
+    return {
+      ...doc,
+      hasSigned
+    };
   }
 
   async updateStatus(petitionId, newStatus) {
@@ -149,27 +262,9 @@ class PetitionService {
   }
 
   async delete(petitionId, userId) {
-    const petition = await Petition.findById(petitionId);
-    if (!petition) {
-      const error = new Error('Petition not found');
-      error.statusCode = 404;
-      throw error;
-    }
-
-    if (petition.creator.toString() !== userId.toString()) {
-      const error = new Error('You are not authorized to delete this petition');
-      error.statusCode = 403;
-      throw error;
-    }
-
-    if (petition.signaturesCount > 0) {
-      const error = new Error('Cannot delete a petition that has already received signatures');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    await Petition.findByIdAndDelete(petitionId);
-    return { deleted: true, id: petitionId };
+    const error = new Error('Petitions cannot be deleted once created to preserve civic accountability and public record');
+    error.statusCode = 403;
+    throw error;
   }
 
   async signPetition(petitionId, userId) {

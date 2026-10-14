@@ -1,42 +1,94 @@
-import { Component, inject } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
-@Component({ selector: 'app-settings', imports: [FormsModule], templateUrl: './settings.component.html', styleUrl: './settings.component.css' })
-export class Settings {
-  private readonly auth = inject(AuthService);
+@Component({
+  selector: 'app-settings',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './settings.component.html',
+  styleUrls: ['./settings.component.css']
+})
+export class SettingsComponent {
+  passwordPayload = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  };
 
-  fullName = 'Civix User'; email = 'user@civix.org'; phone = ''; city = 'Delhi'; state = 'Delhi';
-  emailNotifications = true; pollNotifications = true; petitionNotifications = true; reportNotifications = true; privateAccount = false;
-  currentPassword = ''; newPassword = ''; confirmPassword = ''; passwordMessage = ''; passwordError = false; passwordLoading = false;
+  showCurrent: boolean = false;
+  showNew: boolean = false;
+  showConfirm: boolean = false;
 
-  saveChanges(): void { alert('Settings saved successfully.'); }
+  loading: boolean = false;
+  errorMessage: string = '';
+  successMessage: string = '';
 
-  updatePassword(): void {
-    this.passwordMessage = ''; this.passwordError = false;
-    if (!this.currentPassword || !this.newPassword || !this.confirmPassword) { this.passwordError = true; this.passwordMessage = 'Please fill out all password fields.'; return; }
-    if (this.newPassword.length < 6) { this.passwordError = true; this.passwordMessage = 'New password must be at least 6 characters.'; return; }
-    if (this.newPassword !== this.confirmPassword) { this.passwordError = true; this.passwordMessage = 'New passwords do not match.'; return; }
+  constructor(
+    private readonly authService: AuthService,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
 
-    this.passwordLoading = true;
-    this.auth.changePassword({ currentPassword: this.currentPassword, newPassword: this.newPassword }).subscribe({
-      next: () => {
-        this.passwordLoading = false;
-        this.passwordError = false;
-        this.passwordMessage = 'Password changed successfully.';
-        this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = '';
-      },
-      error: (err: any) => {
-        this.passwordLoading = false;
-        this.passwordError = true;
-        this.passwordMessage = err?.error?.message || 'Failed to update password.';
-      }
-    });
+  get isMinLengthMet(): boolean {
+    return this.passwordPayload.newPassword.length >= 6;
   }
 
-  resetChanges(): void {
-    this.fullName = 'Civix User'; this.email = 'user@civix.org'; this.phone = ''; this.city = 'Delhi'; this.state = 'Delhi';
-    this.emailNotifications = true; this.pollNotifications = true; this.petitionNotifications = true; this.reportNotifications = true; this.privateAccount = false;
-    this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = ''; this.passwordMessage = ''; this.passwordError = false;
+  get doPasswordsMatch(): boolean {
+    return (
+      Boolean(this.passwordPayload.newPassword) &&
+      this.passwordPayload.newPassword === this.passwordPayload.confirmPassword
+    );
+  }
+
+  onChangePassword(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (!this.passwordPayload.currentPassword || !this.passwordPayload.newPassword) {
+      this.errorMessage = 'Please complete all password fields.';
+      return;
+    }
+
+    if (!this.isMinLengthMet) {
+      this.errorMessage = 'New password must contain at least 6 characters.';
+      return;
+    }
+
+    if (!this.doPasswordsMatch) {
+      this.errorMessage = 'The password confirmation does not match.';
+      return;
+    }
+
+    this.loading = true;
+    this.cdr.detectChanges();
+
+    this.authService
+      .changePassword({
+        currentPassword: this.passwordPayload.currentPassword,
+        newPassword: this.passwordPayload.newPassword
+      })
+      .subscribe({
+        next: () => {
+          this.loading = false;
+          this.successMessage = 'Your password has been securely updated.';
+          this.passwordPayload = {
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+          };
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.loading = false;
+          this.errorMessage =
+            err?.error?.message ||
+            'Unable to change password. Please check your current password and try again.';
+          this.cdr.detectChanges();
+        }
+      });
   }
 }
+
+export { SettingsComponent as Settings };

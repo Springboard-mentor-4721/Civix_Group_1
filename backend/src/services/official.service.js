@@ -1,5 +1,6 @@
 const Petition = require('../models/petition.model');
 const OfficialResponse = require('../models/official-response.model');
+const User = require('../models/user.model');
 
 class OfficialService {
   /**
@@ -99,8 +100,17 @@ class OfficialService {
     // Update petition status if changed
     if (newStatus !== previousStatus) {
       petition.status = newStatus;
-      await petition.save();
     }
+
+    // Attach officialResponse directly to petition document
+    petition.officialResponse = {
+      comment: responseData.comment ? responseData.comment.trim() : '',
+      officialName: officialUser.name || 'Municipal Official',
+      department: officialUser.department || responseData.department || '',
+      status: newStatus,
+      updatedAt: new Date()
+    };
+    await petition.save();
 
     // Create official response record
     const officialResponse = await OfficialResponse.create({
@@ -109,8 +119,8 @@ class OfficialService {
       comment: responseData.comment,
       previousStatus,
       newStatus,
-      department: responseData.department || '',
-      officialTitle: responseData.officialTitle || ''
+      department: officialUser.department || responseData.department || '',
+      officialTitle: responseData.officialTitle || 'Municipal Official'
     });
 
     await officialResponse.populate('official', 'name email role location');
@@ -184,6 +194,51 @@ class OfficialService {
       petition: updatedPetition,
       officialResponse
     };
+  }
+
+  /**
+   * Get registered officials with optional search and filters
+   */
+  async getRegisteredOfficials(queryParams = {}) {
+    const filter = { role: 'official' };
+
+    // Search keyword
+    if (queryParams.search && queryParams.search.trim()) {
+      const searchRegex = new RegExp(queryParams.search.trim(), 'i');
+      filter.$or = [
+        { name: searchRegex },
+        { department: searchRegex },
+        { email: searchRegex },
+        { 'location.city': searchRegex },
+        { 'location.state': searchRegex }
+      ];
+    }
+
+    // Department filter
+    if (queryParams.department && queryParams.department !== 'All Departments') {
+      filter.department = new RegExp(queryParams.department.trim(), 'i');
+    }
+
+    // Location filter
+    if (queryParams.location && queryParams.location !== 'All Locations') {
+      const locRegex = new RegExp(queryParams.location.trim(), 'i');
+      const locConditions = [
+        { 'location.city': locRegex },
+        { 'location.state': locRegex }
+      ];
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: locConditions }];
+        delete filter.$or;
+      } else {
+        filter.$or = locConditions;
+      }
+    }
+
+    const officials = await User.find(filter)
+      .select('name email role department location phone createdAt verification')
+      .sort({ createdAt: -1 });
+
+    return officials;
   }
 }
 

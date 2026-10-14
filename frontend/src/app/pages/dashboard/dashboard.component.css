@@ -1,90 +1,51 @@
 /* LAYOUT & GRIDS */
-.spartan-dashboard-layout {
-  background-color: #f8fafc;
-  min-height: calc(100vh - 65px);
-  padding: 24px 32px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: #0f172a;
-}
-.dashboard-grid { display: grid; grid-template-columns: 260px 1fr; gap: 24px; max-width: 1400px; margin: 0 auto; }
-@media (max-width: 960px) { .dashboard-grid { grid-template-columns: 1fr; } }
-.sidebar-column, .content-column, .feed-section { display: flex; flex-direction: column; gap: 16px; }
-.content-column { gap: 24px; }
+.content-column, .feed-section { display: flex; flex-direction: column; gap: 20px; min-width: 0; width: 100%; }
+.content-column { gap: 28px; }
 
 /* SHARED CARD STYLING */
-.profile-card, .sidebar-nav, .welcome-card, .stat-box, .empty-state-card {
+.welcome-card, .stat-box, .empty-state-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 14px;
 }
-.profile-card { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.welcome-card { padding: 24px; }
-.stat-box { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-.empty-state-card { padding: 48px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
-
-/* USER PROFILE & AVATAR */
-.avatar-row, .meta-row, .feed-header, .location-filter, .stat-top, .welcome-header-content { display: flex; align-items: center; }
-.avatar-row { gap: 12px; }
-.name-col { display: flex; flex-direction: column; }
-.avatar-circle {
-  width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 1.1rem; background: #f1f5f9; border: 1px solid #e2e8f0; color: #334155;
-}
-.avatar-circle.official-avatar { background: #e0e7ff; border-color: #c7d2fe; color: #3730a3; }
-.user-display-name { font-weight: 700; font-size: 0.95rem; }
-.verification-tag, .meta-row { font-size: 0.75rem; color: #64748b; gap: 4px; }
-.meta-row { font-size: 0.8rem; gap: 6px; }
-.email-row { font-size: 0.75rem; color: #64748b; word-break: break-all; }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; }
-.status-dot.verified { background: #10b981; }
-
-/* NAVIGATION & BUTTONS */
-.sidebar-nav { padding: 8px; gap: 2px; }
-.nav-item, .btn-logout {
-  display: flex; align-items: center; gap: 12px; padding: 10px 12px; font-size: 0.85rem; font-weight: 600;
-  color: #475569; text-decoration: none; border-radius: 8px; transition: 0.15s ease;
-}
-.nav-item:hover, .nav-item.active { background: #f1f5f9; color: #0f172a; }
-.nav-item.active { font-weight: 700; }
-.sidebar-footer { margin-top: 4px; }
-.btn-logout { width: 100%; border: 1px solid #e2e8f0; background: #ffffff; color: #dc2626; cursor: pointer; }
-.btn-logout:hover { background: #fef2f2; }
+.welcome-card { padding: 28px 32px; }
+.stat-box { padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+.empty-state-card { padding: 56px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
 
 /* HEADER & STATS ROW */
-.welcome-header-content { justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-.role-portal-badge { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: #2563eb; text-transform: uppercase; }
-.welcome-title { font-size: 1.5rem; font-weight: 800; margin: 4px 0 6px; }
-.welcome-sub, .empty-text { font-size: 0.85rem; color: #64748b; margin: 0; }
+.welcome-header-content { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; }
+.role-portal-badge { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.09em; color: #2563eb; text-transform: uppercase; }
+.welcome-title { font-size: 1.85rem; font-weight: 800; margin: 6px 0 8px; color: #0f172a; }
+.welcome-sub, .empty-text { font-size: 0.95rem; color: #64748b; margin: 0; line-height: 1.55; }
 .primary-action-btn {
-  background: #0f172a; color: #fff; border: none; border-radius: 8px; padding: 10px 18px;
-  font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.15s ease;
+  background: #0f172a; color: #fff; border: none; border-radius: 10px; padding: 12px 22px;
+  font-size: 0.92rem; font-weight: 600; cursor: pointer; transition: 0.15s ease;
 }
 .primary-action-btn:hover { background: #334155; }
-.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-@media (max-width: 768px) { .stats-row { grid-template-columns: 1fr; } }
-.stat-top { justify-content: space-between; }
-.stat-label { font-size: 0.85rem; font-weight: 600; color: #334155; }
-.stat-value { font-size: 1.8rem; font-weight: 800; margin: 4px 0; }
-.stat-footer-text { font-size: 0.75rem; color: #94a3b8; }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.stat-top { display: flex; align-items: center; justify-content: space-between; }
+.stat-label { font-size: 0.92rem; font-weight: 600; color: #334155; }
+.stat-value { font-size: 2.3rem; font-weight: 800; margin: 4px 0; color: #0f172a; }
+.stat-footer-text { font-size: 0.82rem; color: #94a3b8; }
 
 /* FEED & FILTER CONTROLS */
-.feed-header { justify-content: space-between; }
-.feed-title { font-size: 1.1rem; font-weight: 800; margin: 0; }
-.showing-label { font-size: 0.8rem; color: #64748b; }
+.feed-header { display: flex; align-items: center; justify-content: space-between; }
+.feed-title { font-size: 1.25rem; font-weight: 800; margin: 0; color: #0f172a; }
+.showing-label { font-size: 0.88rem; color: #64748b; }
 .location-dropdown-btn {
-  display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #e2e8f0;
-  border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600; color: #0f172a; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 9px; padding: 8px 14px; font-size: 0.85rem; font-weight: 600; color: #0f172a; cursor: pointer;
 }
-.category-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.category-pills { display: flex; gap: 9px; flex-wrap: wrap; }
 .pill-btn {
-  background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 6px 14px;
-  font-size: 0.75rem; font-weight: 600; color: #475569; cursor: pointer; transition: 0.15s ease;
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 8px 16px;
+  font-size: 0.82rem; font-weight: 600; color: #475569; cursor: pointer; transition: 0.15s ease;
 }
 .pill-btn:hover { background: #f1f5f9; }
 .pill-btn.active { background: #334155; color: #fff; border-color: #334155; }
 .clear-filters-btn {
-  background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 16px;
-  font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.15s ease;
+  background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 9px 18px;
+  font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.15s ease;
 }
 .clear-filters-btn:hover { background: #f8fafc; }
 .stat-link {
@@ -103,18 +64,18 @@
 .feed-cards-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .feed-item-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 14px;
+  padding: 22px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 
 .feed-item-main {
@@ -157,7 +118,8 @@
 
 .feed-item-metadata {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 8px 16px;
   font-size: 0.78rem;
   color: #94a3b8;
 }
@@ -201,6 +163,7 @@
   flex-direction: column;
   gap: 16px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
 .modal-top {
@@ -272,4 +235,165 @@
   font-weight: 600;
   color: #475569;
   cursor: pointer;
+}
+
+@media (max-width: 960px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .sidebar-column {
+    gap: 12px;
+  }
+
+  .profile-card {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .sidebar-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 6px;
+  }
+
+  .nav-item {
+    justify-content: center;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+  }
+
+  .sidebar-footer {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .spartan-dashboard-layout {
+    padding: 14px 12px;
+  }
+
+  .welcome-card {
+    padding: 16px;
+  }
+
+  .welcome-title {
+    font-size: 1.3rem;
+  }
+
+  .welcome-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .header-action-btn-wrapper,
+  .primary-action-btn {
+    width: 100%;
+  }
+
+  .stats-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .feed-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .location-filter {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .category-pills {
+    gap: 6px;
+  }
+
+  .feed-item-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .feed-item-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .feed-item-title {
+    font-size: 0.95rem;
+  }
+
+  .action-respond-btn {
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .modal-container {
+    padding: 18px 14px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-footer-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-footer-actions button {
+    width: 100%;
+  }
+}
+
+/* Official Response Box on Feed Item */
+.official-response-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 4px solid #16a34a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 8px 0 10px 0;
+}
+
+.official-response-box .response-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #166534;
+}
+
+.official-response-box .response-badge {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.official-response-box .official-meta {
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.official-response-box .response-comment {
+  margin: 0;
+  font-size: 12.5px;
+  color: #1e293b;
+  line-height: 1.4;
+  font-weight: 500;
 }

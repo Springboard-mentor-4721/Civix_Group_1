@@ -24,8 +24,8 @@ const officialResponseValidator = [
     .trim()
     .notEmpty()
     .withMessage('Response comment is required')
-    .isLength({ min: 5, max: 2000 })
-    .withMessage('Response comment must be between 5 and 2000 characters'),
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Response comment cannot exceed 2000 characters'),
 
   body('status')
     .optional()

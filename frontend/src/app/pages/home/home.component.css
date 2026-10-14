@@ -13,12 +13,14 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.92fr);
-  gap: clamp(2rem, 4vw, 5rem);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: clamp(1.5rem, 4vw, 5rem);
   align-items: center;
   max-width: 1500px;
   margin: 0 auto;
-  padding: 1.5rem 2rem 0;
+  padding: 1.5rem clamp(1rem, 3.5vw, 2rem) 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .home-copy {
@@ -38,10 +40,12 @@ h1 {
   max-width: 660px;
   margin: 1.2rem 0 1rem;
   color: var(--ink);
-  font-size: clamp(4.2rem, 7vw, 7.5rem);
-  line-height: 0.86;
+  font-size: clamp(2.4rem, 6vw, 6.8rem);
+  line-height: 0.92;
   font-weight: 500;
-  letter-spacing: -0.08em;
+  letter-spacing: -0.06em;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .lede {
@@ -252,11 +256,22 @@ h1 {
 .tag-3 { left: 48px; bottom: 16px; }
 .tag-4 { right: 18px; bottom: 70px; }
 
-@media (max-width: 760px) {
+@media (max-width: 960px) {
   .home-grid {
     grid-template-columns: 1fr;
+    gap: 2.5rem;
   }
 
+  .home-copy {
+    max-width: 100%;
+  }
+
+  .home-panel {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 760px) {
   .feature-row {
     grid-template-columns: 1fr 1fr;
   }
@@ -270,15 +285,15 @@ h1 {
   }
 
   .home-panel {
-    min-height: 390px;
+    min-height: 360px;
   }
 
   .civic-scene {
-    height: 360px;
+    height: 330px;
   }
 
   .hero-art {
-    width: min(100%, 440px);
+    width: min(100%, 380px);
   }
 
   .float-tag {
@@ -288,8 +303,78 @@ h1 {
   }
 
   .tag-1 { top: 12px; left: 8px; }
-  .tag-2 { top: 94px; right: 8px; }
-  .tag-3 { left: 8px; bottom: 24px; }
-  .tag-4 { right: 8px; bottom: 70px; }
+  .tag-2 { top: 84px; right: 8px; }
+  .tag-3 { left: 8px; bottom: 20px; }
+  .tag-4 { right: 8px; bottom: 60px; }
+}
+
+@media (max-width: 480px) {
+  :host {
+    min-height: auto;
+  }
+
+  .home-grid {
+    padding: 0.8rem 0 0;
+    gap: 1.8rem;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 8vw, 2.9rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin: 0.8rem 0;
+  }
+
+  .lede {
+    font-size: 0.98rem;
+  }
+
+  .feature-row {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+    margin-top: 1.4rem;
+  }
+
+  .feature-item {
+    min-height: 72px;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
+    margin-top: 1.6rem;
+  }
+
+  .actions .button {
+    width: 100%;
+  }
+
+  .home-panel {
+    min-height: 270px;
+    border-radius: 1.2rem;
+    padding: 0.2rem;
+  }
+
+  .civic-scene {
+    height: 250px;
+    border-radius: 1.05rem;
+  }
+
+  .hero-art {
+    width: min(92%, 290px);
+  }
+
+  .float-tag {
+    font-size: 0.58rem;
+    min-height: 28px;
+    padding: 0.3rem 0.55rem;
+  }
+
+  .tag-1 { top: 8px; left: 6px; }
+  .tag-2 { top: 46px; right: 6px; }
+  .tag-3 { display: none; }
+  .tag-4 { right: 6px; bottom: 10px; }
 }
 

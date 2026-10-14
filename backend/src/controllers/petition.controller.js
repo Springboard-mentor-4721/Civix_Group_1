@@ -19,7 +19,7 @@ class PetitionController {
    */
   async getPetitions(req, res, next) {
     try {
-      const result = await petitionService.findAll(req.query);
+      const result = await petitionService.findAll(req.query, req.user?._id);
       return sendSuccess(res, 200, 'Petitions retrieved successfully', result);
     } catch (error) {
       next(error);
@@ -39,11 +39,23 @@ class PetitionController {
   }
 
   /**
+   * Get petitions signed by current user
+   */
+  async getSignedPetitions(req, res, next) {
+    try {
+      const result = await petitionService.findSignedByUser(req.user._id, req.query);
+      return sendSuccess(res, 200, 'Signed petitions retrieved successfully', result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Get a single petition by ID
    */
   async getPetitionById(req, res, next) {
     try {
-      const petition = await petitionService.findById(req.params.id);
+      const petition = await petitionService.findById(req.params.id, req.user?._id);
       return sendSuccess(res, 200, 'Petition retrieved successfully', { petition });
     } catch (error) {
       next(error);

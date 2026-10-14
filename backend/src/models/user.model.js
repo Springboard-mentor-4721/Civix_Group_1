@@ -35,6 +35,16 @@ const userSchema = new mongoose.Schema(
       },
       default: 'citizen'
     },
+    department: {
+      type: String,
+      default: '',
+      trim: true
+    },
+    phone: {
+      type: String,
+      default: '',
+      trim: true
+    },
     location: {
       address: { type: String, default: '', trim: true },
       city: { type: String, default: '', trim: true },

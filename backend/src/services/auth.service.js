@@ -6,7 +6,7 @@ class AuthService {
    * Register a new citizen or official user
    */
   async register(userData) {
-    const { name, email, password, role, location, verification } = userData;
+    const { name, email, password, role, department, phone, location, verification } = userData;
 
     // Check if email is already in use
     const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
@@ -21,7 +21,9 @@ class AuthService {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
-      role: role || 'citizen'
+      role: role || 'citizen',
+      department: (role === 'official' && department) ? department.trim() : (department ? department.trim() : ''),
+      phone: phone ? phone.trim() : ''
     };
 
     if (location) {

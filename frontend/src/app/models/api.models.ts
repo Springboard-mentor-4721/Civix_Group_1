@@ -20,6 +20,7 @@ export interface User {
   email: string;
   phone?: string | null;
   role: 'citizen' | 'official';
+  department?: string | null;
   location: Location;
   verification: Verification;
   createdAt: string;
@@ -53,6 +54,8 @@ export interface RegisterPayload {
   email: string;
   password: string;
   role?: 'citizen' | 'official';
+  department?: string;
+  phone?: string;
   location?: Partial<Location>;
   verification?: {
     documentType?: string;

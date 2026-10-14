@@ -82,6 +82,13 @@ const petitionSchema = new mongoose.Schema(
     mediaUrls: {
       type: [String],
       default: []
+    },
+    officialResponse: {
+      comment: { type: String, default: '' },
+      officialName: { type: String, default: '' },
+      department: { type: String, default: '' },
+      status: { type: String, default: '' },
+      updatedAt: { type: Date, default: null }
     }
   },
   {

@@ -13,15 +13,17 @@ const {
 } = require('../validators/official.validator');
 const validate = require('../middleware/validate.middleware');
 const authenticate = require('../middleware/auth.middleware');
+const { optionalAuthenticate } = require('../middleware/auth.middleware');
 const authorize = require('../middleware/role.middleware');
 
 const router = express.Router();
 
-// Public routes
-router.get('/', petitionQueryValidator, validate, petitionController.getPetitions);
+// Public routes (with optional auth so user's signed status is identified)
+router.get('/', optionalAuthenticate, petitionQueryValidator, validate, petitionController.getPetitions);
 
 // Protected routes (Specific routes before parameter routes)
 router.get('/my', authenticate, petitionQueryValidator, validate, petitionController.getMyPetitions);
+router.get('/signed', authenticate, petitionQueryValidator, validate, petitionController.getSignedPetitions);
 router.post('/', authenticate, createPetitionValidator, validate, petitionController.createPetition);
 
 // Official sub-routes on petitions (Milestone 4)

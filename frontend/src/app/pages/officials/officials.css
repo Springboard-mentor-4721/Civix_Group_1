@@ -1,47 +1,41 @@
 .officials-page {
-  min-height: calc(100vh - 65px);
-  background: #f7f8fa;
-  padding: 38px 42px;
+  min-height: auto;
+  background: transparent;
+  padding: 0;
   color: #172033;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 
 /* HEADER */
 
 .page-header {
-  max-width: 1200px;
-  margin: 0 auto 25px;
-
-  padding-bottom: 28px;
-
+  max-width: 100%;
+  margin: 0 0 24px;
+  padding-bottom: 24px;
   border-bottom: 1px solid #dfe3e8;
 }
 
 .eyebrow {
   font-size: 10px;
   font-weight: 700;
-
   letter-spacing: .12em;
-
   color: #c94b32;
 }
 
 .page-header h1 {
   margin: 7px 0 8px;
-
   font-family: Georgia, "Times New Roman", serif;
-
-  font-size: 44px;
+  font-size: clamp(28px, 4.5vw, 44px);
   font-weight: 500;
-
   color: #172b2c;
+  overflow-wrap: break-word;
 }
 
 .page-header p {
   margin: 0;
-
   color: #64748b;
-
   font-size: 14px;
   line-height: 1.6;
 }
@@ -50,13 +44,11 @@
 /* FILTER SECTION */
 
 .filter-section {
-  max-width: 1200px;
-
-  margin: 0 auto 18px;
-
+  max-width: 100%;
+  margin: 0 0 18px;
   display: flex;
-
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 
@@ -133,16 +125,11 @@
 .clear-btn {
   border: 1px solid #cbd5e1;
   border-radius: 5px;
-
   background: white;
-
   color: #172b2c;
-
   padding: 10px 15px;
-
   font-size: 12px;
   font-weight: 600;
-
   cursor: pointer;
 }
 
@@ -150,37 +137,113 @@
   background: #f8fafc;
 }
 
+.refresh-btn {
+  border: 1px solid #c94b32;
+  border-radius: 5px;
+  background: #fff5f3;
+  color: #c94b32;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+  background: #c94b32;
+  color: white;
+}
+
+.api-notice {
+  max-width: 1200px;
+  margin: 0 auto 16px;
+  padding: 12px 16px;
+  background: #fffbeb;
+  border: 1px solid #fef08a;
+  border-radius: 6px;
+  color: #854d0e;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.retry-btn {
+  background: #854d0e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.retry-btn:hover {
+  background: #713f12;
+}
 
 /* RESULTS HEADER */
 
 .results-header {
-  max-width: 1200px;
-
-  margin: 0 auto 12px;
-
+  max-width: 100%;
+  margin: 0 0 16px;
   color: #64748b;
-
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .results-header strong {
   color: #172b2c;
 }
 
+.loading-state {
+  max-width: 100%;
+  margin: 20px 0 30px;
+  text-align: center;
+  padding: 48px 24px;
+  background: white;
+  border: 1px solid #e1e5ea;
+  border-radius: 12px;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #c94b32;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 
 /* GRID */
 
 .official-grid {
-  max-width: 1200px;
-
-  margin: 0 auto;
-
+  max-width: 100%;
+  margin: 0;
   display: grid;
-
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
-
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 18px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 
@@ -449,12 +512,6 @@
 /* RESPONSIVE */
 
 @media (max-width: 950px) {
-
-  .official-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-  }
-
   .filter-section {
     flex-wrap: wrap;
   }
@@ -462,30 +519,52 @@
   .search-box {
     flex-basis: 100%;
   }
-
 }
 
-
 @media (max-width: 650px) {
-
   .officials-page {
-    padding: 25px 16px;
+    padding: 20px 14px;
   }
 
   .page-header h1 {
-    font-size: 36px;
-  }
-
-  .official-grid {
-    grid-template-columns: 1fr;
+    font-size: 30px;
   }
 
   .filter-section {
     flex-direction: column;
   }
 
-  .filter-box select {
+  .filter-box {
     width: 100%;
+    box-sizing: border-box;
   }
 
+  .filter-box select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .clear-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .officials-page {
+    padding: 16px 12px;
+  }
+
+  .page-header h1 {
+    font-size: 26px;
+  }
+
+  .official-card {
+    padding: 16px 14px;
+  }
+
+  .official-header {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
 }

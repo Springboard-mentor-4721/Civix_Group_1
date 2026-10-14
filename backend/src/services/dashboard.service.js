@@ -43,23 +43,39 @@ class DashboardService {
     }
 
     if (role === 'official') {
-      const jurisdictionMatch = {
-        status: 'under_review',
-        'location.city': city,
-        'location.state': state
+      const now = new Date();
+      await Poll.updateMany(
+        { status: 'active', endDate: { $ne: null, $lt: now } },
+        { $set: { status: 'closed' } }
+      );
+
+      const reviewMatch = { status: { $in: ['under_review', 'active'] } };
+      const resolvedMatch = { status: { $in: ['resolved', 'closed'] } };
+      const pollMatch = {
+        status: 'active',
+        $or: [{ endDate: null }, { endDate: { $gt: now } }]
       };
-      const [petitionsPendingReview, incomingPetitionsForDepartmentReview, activeMunicipalPolls] = await Promise.all([
-        Petition.countDocuments(jurisdictionMatch),
-        Petition.countDocuments(jurisdictionMatch),
-        Poll.countDocuments({
-          status: 'active',
-          'location.city': city,
-          'location.state': state
-        })
+
+      if (city) {
+        reviewMatch['location.city'] = new RegExp(city, 'i');
+        resolvedMatch['location.city'] = new RegExp(city, 'i');
+        pollMatch['location.city'] = new RegExp(city, 'i');
+      }
+      if (state) {
+        reviewMatch['location.state'] = new RegExp(state, 'i');
+        resolvedMatch['location.state'] = new RegExp(state, 'i');
+        pollMatch['location.state'] = new RegExp(state, 'i');
+      }
+
+      const [petitionsPendingReview, resolvedGrievances, activeMunicipalPolls] = await Promise.all([
+        Petition.countDocuments(reviewMatch),
+        Petition.countDocuments(resolvedMatch),
+        Poll.countDocuments(pollMatch)
       ]);
 
       stats.petitionsPendingReview = petitionsPendingReview;
-      stats.incomingPetitionsForDepartmentReview = incomingPetitionsForDepartmentReview;
+      stats.incomingPetitionsForDepartmentReview = petitionsPendingReview;
+      stats.resolvedGrievances = resolvedGrievances;
       stats.activeMunicipalPolls = activeMunicipalPolls;
       return stats;
     }

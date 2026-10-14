@@ -1,7 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { finalize } from 'rxjs';
+import { API_BASE_URL } from '../../services/auth.service';
 
-interface Official {
+export interface Official {
+  _id?: string;
   name: string;
   role: string;
   department: string;
@@ -9,170 +13,187 @@ interface Official {
   email: string;
   phone: string;
   initials: string;
-  status: 'ACTIVE' | 'OFFICE CLOSED';
+  status: string;
 }
 
 @Component({
   selector: 'app-officials',
+  standalone: true,
   imports: [FormsModule],
   templateUrl: './officials.html',
   styleUrl: './officials.css'
 })
-export class Officials {
+export class Officials implements OnInit {
+  private readonly http = inject(HttpClient);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   searchText = '';
-
   selectedDepartment = 'All Departments';
-
   selectedLocation = 'All Locations';
+  loading = false;
+  errorMessage = '';
 
-
-  departments = [
-    'All Departments',
+  defaultDepartments = [
     'Municipal Corporation',
     'Public Works',
     'Transportation',
     'Education',
     'Health',
-    'Environment'
+    'Environment',
+    'Sanitation & Waste Management',
+    'Water Supply & Sewage',
+    'Urban Development',
+    'General Administration'
   ];
 
+  departments = ['All Departments', ...this.defaultDepartments];
+  locations = ['All Locations', 'Noida', 'Delhi', 'Mumbai', 'Nagpur', 'Pune'];
 
-  locations = [
-    'All Locations',
-    'Delhi',
-    'Mumbai',
-    'Nagpur',
-    'Pune'
-  ];
+  officials: Official[] = [];
 
+  ngOnInit(): void {
+    this.loadOfficials();
+  }
 
-  officials: Official[] = [
+  loadOfficials(): void {
+    this.loading = true;
+    this.errorMessage = '';
+    this.cdr.markForCheck();
 
-    {
-      name: 'Rajesh Kumar',
-      role: 'Municipal Commissioner',
-      department: 'Municipal Corporation',
-      location: 'Delhi',
-      email: 'rajesh.kumar@civix.org',
-      phone: '+91 98765 43210',
-      initials: 'RK',
-      status: 'ACTIVE'
-    },
+    this.http.get<{ success?: boolean; data?: any }>(`${API_BASE_URL}/official`).pipe(
+      finalize(() => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: (response) => {
+        let rawList: any[] = [];
+        if (Array.isArray(response?.data)) {
+          rawList = response.data;
+        } else if (response?.data && Array.isArray((response.data as any).officials)) {
+          rawList = (response.data as any).officials;
+        } else if (Array.isArray(response)) {
+          rawList = response as any[];
+        }
 
-    {
-      name: 'Anita Sharma',
-      role: 'Public Works Officer',
-      department: 'Public Works',
-      location: 'Nagpur',
-      email: 'anita.sharma@civix.org',
-      phone: '+91 98765 43211',
-      initials: 'AS',
-      status: 'ACTIVE'
-    },
+        if (rawList.length > 0) {
+          this.officials = rawList.map((u) => this.mapUserToOfficial(u));
+        } else {
+          this.officials = [];
+        }
+        this.syncFilters();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Failed to load registered officials from API:', err);
+        this.errorMessage = 'Unable to connect to live officials service. Loaded sample directory.';
+        this.officials = this.getFallbackOfficials();
+        this.syncFilters();
+        this.cdr.markForCheck();
+      }
+    });
+  }
 
-    {
-      name: 'Vikram Singh',
-      role: 'Transportation Officer',
-      department: 'Transportation',
-      location: 'Pune',
-      email: 'vikram.singh@civix.org',
-      phone: '+91 98765 43212',
-      initials: 'VS',
-      status: 'ACTIVE'
-    },
+  private getFallbackOfficials(): Official[] {
+    return [
+      {
+        name: 'Aryan Agarwal',
+        role: 'Municipal Corporation Officer',
+        department: 'Municipal Corporation',
+        location: 'Noida, Uttar Pradesh',
+        email: 'aryan123@gmail.com',
+        phone: '+91 98765 43210',
+        initials: 'AA',
+        status: 'ACTIVE'
+      },
+      {
+        name: 'Box Officer',
+        role: 'Public Works Officer',
+        department: 'Public Works',
+        location: 'Jurisdiction Assigned',
+        email: 'box@gmail.com',
+        phone: '+91 98765 43210',
+        initials: 'BO',
+        status: 'ACTIVE'
+      }
+    ];
+  }
 
-    {
-      name: 'Priya Mehta',
-      role: 'Education Officer',
-      department: 'Education',
-      location: 'Mumbai',
-      email: 'priya.mehta@civix.org',
-      phone: '+91 98765 43213',
-      initials: 'PM',
-      status: 'ACTIVE'
-    },
+  private mapUserToOfficial(u: any): Official {
+    const name = u.name || 'Official';
+    const initials = name
+      .split(' ')
+      .filter(Boolean)
+      .map((part: string) => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) || 'OF';
 
-    {
-      name: 'Amit Deshmukh',
-      role: 'Environmental Officer',
-      department: 'Environment',
-      location: 'Nagpur',
-      email: 'amit.deshmukh@civix.org',
-      phone: '+91 98765 43214',
-      initials: 'AD',
-      status: 'ACTIVE'
-    },
+    const city = u.location?.city || '';
+    const state = u.location?.state || '';
+    const locationStr = [city, state].filter(Boolean).join(', ') || 'Jurisdiction Assigned';
+    const dept = u.department || 'Municipal Corporation';
 
-    {
-      name: 'Neha Patel',
-      role: 'Public Health Officer',
-      department: 'Health',
-      location: 'Delhi',
-      email: 'neha.patel@civix.org',
-      phone: '+91 98765 43215',
-      initials: 'NP',
-      status: 'ACTIVE'
+    return {
+      _id: u._id,
+      name,
+      role: `${dept} Officer`,
+      department: dept,
+      location: locationStr,
+      email: u.email || 'official@civix.org',
+      phone: u.phone || '+91 98765 43210',
+      initials,
+      status: u.verification?.isVerified ? 'VERIFIED' : 'ACTIVE'
+    };
+  }
+
+  private syncFilters(): void {
+    const deptSet = new Set<string>(['All Departments', ...this.defaultDepartments]);
+    const locSet = new Set<string>(['All Locations', 'Noida', 'Delhi', 'Mumbai', 'Nagpur', 'Pune']);
+
+    for (const off of this.officials) {
+      if (off.department) {
+        deptSet.add(off.department);
+      }
+      if (off.location && off.location !== 'Jurisdiction Assigned') {
+        const parts = off.location.split(',').map((p: string) => p.trim());
+        for (const p of parts) {
+          if (p) locSet.add(p);
+        }
+      }
     }
 
-  ];
-
+    this.departments = Array.from(deptSet);
+    this.locations = Array.from(locSet);
+  }
 
   get filteredOfficials(): Official[] {
-
-    const search = this.searchText
-      .toLowerCase()
-      .trim();
-
+    const search = this.searchText.toLowerCase().trim();
 
     return this.officials.filter((official) => {
-
       const matchesSearch =
         !search ||
-        official.name
-          .toLowerCase()
-          .includes(search) ||
-
-        official.role
-          .toLowerCase()
-          .includes(search) ||
-
-        official.department
-          .toLowerCase()
-          .includes(search);
-
+        official.name.toLowerCase().includes(search) ||
+        official.role.toLowerCase().includes(search) ||
+        official.department.toLowerCase().includes(search) ||
+        official.location.toLowerCase().includes(search) ||
+        official.email.toLowerCase().includes(search);
 
       const matchesDepartment =
         this.selectedDepartment === 'All Departments' ||
-        official.department === this.selectedDepartment;
-
+        official.department.toLowerCase() === this.selectedDepartment.toLowerCase();
 
       const matchesLocation =
         this.selectedLocation === 'All Locations' ||
-        official.location === this.selectedLocation;
+        official.location.toLowerCase().includes(this.selectedLocation.toLowerCase());
 
-
-      return (
-        matchesSearch &&
-        matchesDepartment &&
-        matchesLocation
-      );
-
+      return matchesSearch && matchesDepartment && matchesLocation;
     });
-
   }
-
 
   clearFilters(): void {
-
     this.searchText = '';
-
-    this.selectedDepartment =
-      'All Departments';
-
-    this.selectedLocation =
-      'All Locations';
-
+    this.selectedDepartment = 'All Departments';
+    this.selectedLocation = 'All Locations';
   }
-
 }
